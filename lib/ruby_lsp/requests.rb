@@ -26,6 +26,7 @@ module RubyLsp
     autoload :BaseRequest, "ruby_lsp/requests/base_request"
     autoload :DocumentSymbol, "ruby_lsp/requests/document_symbol"
     autoload :DocumentLink, "ruby_lsp/requests/document_link"
+    autoload :DocumentSave, "ruby_lsp/requests/document_save"
     autoload :Hover, "ruby_lsp/requests/hover"
     autoload :FoldingRanges, "ruby_lsp/requests/folding_ranges"
     autoload :SelectionRanges, "ruby_lsp/requests/selection_ranges"

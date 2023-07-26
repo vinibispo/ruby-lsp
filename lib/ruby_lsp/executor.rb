@@ -80,6 +80,8 @@ module RubyLsp
           request.dig(:params, :contentChanges),
           request.dig(:params, :textDocument, :version),
         )
+      when "textDocument/didSave"
+        text_document_did_save(uri)
       when "textDocument/foldingRange"
         folding_range(uri)
       when "textDocument/selectionRange"
@@ -169,6 +171,8 @@ module RubyLsp
         completion(uri, request.dig(:params, :position))
       when "textDocument/definition"
         definition(uri, request.dig(:params, :position))
+      # when "workspace/diagnostic"
+      #   workspace_diagnostic(uri)
       when "rubyLsp/textDocument/showSyntaxTree"
         { ast: Requests::ShowSyntaxTree.new(@store.get(uri)).run }
       end
@@ -237,6 +241,15 @@ module RubyLsp
     sig { params(uri: String).returns(Object) }
     def text_document_did_close(uri)
       @store.delete(uri)
+      VOID
+    end
+
+    sig { params(uri: String).returns(Object) }
+    def text_document_did_save(uri)
+      Requests::DocumentSave.listeners.each do |listener|
+        instance = listener.new(EventEmitter.new, @message_queue)
+        instance.response
+      end
       VOID
     end
 
@@ -428,6 +441,16 @@ module RubyLsp
       listener.response
     end
 
+    # sig { params(previous_result_ids: T::Array[T::Hash[Symbol, String]]).returns(Interface::WorkspaceDiagnosticReport) }
+    # def workspace_diagnostic(previous_result_ids)
+    #   Requests::WorkspaceDiagnostic.listeners.each do |listener|
+    #     instance = listener.new(EventEmitter.new, @message_queue)
+    #     return instance.response
+    #   end
+
+    #   T.unsafe(nil)
+    # end
+
     sig { params(options: T::Hash[Symbol, T.untyped]).returns(Interface::InitializeResult) }
     def initialize_request(options)
       @store.clear
@@ -507,7 +530,7 @@ module RubyLsp
       diagnostics_provider = if enabled_features["diagnostics"]
         {
           interFileDependencies: false,
-          workspaceDiagnostics: false,
+          workspaceDiagnostics: true,
         }
       end
 
@@ -538,6 +561,7 @@ module RubyLsp
           text_document_sync: Interface::TextDocumentSyncOptions.new(
             change: Constant::TextDocumentSyncKind::INCREMENTAL,
             open_close: true,
+            save: true,
           ),
           position_encoding: @store.encoding,
           selection_range_provider: enabled_features["selectionRanges"],
