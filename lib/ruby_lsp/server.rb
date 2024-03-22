@@ -236,29 +236,23 @@ module RubyLsp
 
       RubyVM::YJIT.enable if defined?(RubyVM::YJIT.enable)
 
-      indexing_config = {}
+      # indexing_config = {}
+      indexing_config = IndexingConfig.call(@store.workspace_uri)
 
-      # Need to use the workspace URI, otherwise, this will fail for people working on a project that is a symlink.
-      index_path = File.join(@store.workspace_uri.to_standardized_path, ".index.yml")
-
-      if File.exist?(index_path)
-        begin
-          indexing_config = YAML.parse_file(".index.yml").to_ruby
-        rescue Psych::SyntaxError => e
-          message = "Syntax error while loading .index.yml configuration: #{e.message}"
-          send_message(
-            Notification.new(
-              method: "window/showMessage",
-              params: Interface::ShowMessageParams.new(
-                type: Constant::MessageType::WARNING,
-                message: message,
-              ),
+      begin
+        perform_initial_indexing(indexing_config)
+      rescue Psych::SyntaxError => e
+        message = "Syntax error while loading configuration: #{e.message}"
+        send_message(
+          Notification.new(
+            method: "window/showMessage",
+            params: Interface::ShowMessageParams.new(
+              type: Constant::MessageType::WARNING,
+              message: message,
             ),
-          )
-        end
+          ),
+        )
       end
-
-      perform_initial_indexing(indexing_config)
       check_formatter_is_available
     end
 
