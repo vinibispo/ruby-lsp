@@ -180,6 +180,59 @@ module RubyIndexer
 
         index_single(path)
       end
+
+      # # iterate over entries, if entry is associated with a gem, cache it
+      # #
+      # # { "rails-7.1.0" => [IndexablePath.new(require, full_path)] }
+
+      # indexable_paths.each do |group_name, paths|
+      #   group_entries = paths.to_h do |path|
+      #     [path.full_path, { entries: @files_to_entries[path.full_path], indexable_path: path }]
+      #   end
+
+      #   File.write(".ruby-lsp/.cache/#{group_name}", group_entries.to_json)
+      # end
+    end
+
+    def export_to_cache
+      # iterate over entries, if entry is associated with a gem, cache it
+      #
+      # { "rails-7.1.0" => [IndexablePath.new(require, full_path)] }
+
+      # loop through paths
+      # "x/y/z.rb" => { entries: [Entry::Class, Entry::Class], indexable_path: IndexablePath }
+      # indexable_paths.each do |group_name, paths|
+      #   group_entries = paths.to_h do |path|
+      #     [path.full_path, { entries: @files_to_entries[path.full_path], indexable_path: path }]
+      #   end
+
+      #   File.write(".ruby-lsp/.cache/#{group_name}", group_entries.to_json)
+      # end
+
+      # {
+      #   'gem_A' => [
+      #     ['/home/user/bundle_path/gems/gem_A/lib/somefile.rb' => 'entry1'],
+      #     ['/home/user/bundle_path/gems/gem_A/lib/anotherfile.rb' => 'entry2']
+      #   ],
+      #   'gem_B' => [
+      #     ['/home/user/bundle_path/gems/gem_B/lib/somefile.rb' => 'entry3']
+      #   ]
+      # }
+      # }
+      grouped = @files_to_entries.select do |path, entries|
+        path.start_with?(Bundler.bundle_path)
+      end.group_by do |path, entries|
+        Pathname.new(path).relative_path_from(Bundler.bundle_path.join("gems")).each_filename.first
+      end
+
+      # write to cache
+      # gives array of entries associated with gem
+      grouped.each do |group_name, paths|
+        cache_path = File.join(".ruby-lsp", "cache", group_name)
+        unless File.exist?(cache_path)
+          File.write(cache_path, paths.flat_map(&:last).to_json)
+        end
+      end
     end
 
     sig { params(indexable_path: IndexablePath, source: T.nilable(String)).void }
@@ -188,6 +241,14 @@ module RubyIndexer
       result = Prism.parse(content)
       collector = Collector.new(self, result, indexable_path.full_path)
       collector.collect(result.value)
+
+      # before we index a gem, we want to check if its in the cache
+      # every time we index a gem,
+      #
+      # indexing gives 1 instance of index, append all paths to gem to index state
+      # then you find foo, index it, then index state has foo and baz
+      #
+      # [foo, baz, bar]
 
       require_path = indexable_path.require_path
       @require_paths_tree.insert(require_path, indexable_path) if require_path

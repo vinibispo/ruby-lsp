@@ -1,6 +1,36 @@
 # typed: strict
 # frozen_string_literal: true
 
+module Prism
+  class Location
+    def to_json(*args)
+      {
+        source: @source.to_json,
+        start_offset: @start_offset,
+        length: @length,
+      }
+    end
+
+    def self.json_create(hash)
+      new(Source.json_create(hash["source"]), hash["start_offset"], hash["length"])
+    end
+  end
+
+  class Source
+    def to_json(*args)
+      {
+        source: @source,
+        start_line: @start_line,
+        offsets: @offsets,
+      }
+    end
+
+    def self.json_create(hash)
+      new(hash["source"], hash["start_line"], hash["offsets"])
+    end
+  end
+end
+
 module RubyIndexer
   class Entry
     extend T::Sig
@@ -24,6 +54,7 @@ module RubyIndexer
     def initialize(name, file_path, location, comments)
       @name = name
       @file_path = file_path
+      # start_line, end_line, start_column, end_column
       @location = location
       @comments = comments
       @visibility = T.let(:public, Symbol)
@@ -32,6 +63,103 @@ module RubyIndexer
     sig { returns(String) }
     def file_name
       File.basename(@file_path)
+    end
+
+    sig { abstract.params(args: T.untyped).returns(String) }
+    def to_json(*args); end
+
+    sig { abstract.params(hash: T::Hash[String, T.untyped]).returns(T.attached_class) }
+    def self.json_create(hash); end
+
+    def to_json(*arg)
+      kind = { "entry_kind": self.class.name.split("::").last }
+
+      hash = instance_variables.to_h do |variable_name|
+        value = instance_variable_get(variable_name)
+        [variable_name, value.to_json(*arg)]
+      end
+
+      kind.merge(hash)
+    end
+
+    def self.json_create(hash)
+      entry_kind = hash["entry_kind"]
+      # debugger
+      # const_get(entry_kind).json_create(hash)
+
+      case entry_kind
+      when "Namespace"
+        Namespace.new(
+          hash["@name"],
+          hash["@file_path"],
+          Prism::Location.json_create(hash["@location"]),
+          JSON.parse(hash["@comments"]),
+        )
+      when "Module"
+        Module.new(
+          hash["@name"],
+          hash["@file_path"],
+          Prism::Location.json_create(hash["@location"]),
+          hash["@comments"],
+        )
+      when "Class"
+        Class.new(
+          hash["@name"],
+          hash["@file_path"],
+          Prism::Location.json_create(hash["@location"]),
+          JSON.parse(hash["@comments"]),
+          JSON.parse(hash["@parent_class"]),
+        )
+      when "Constant"
+        Constant.new(
+          hash["@name"],
+          hash["@file_path"],
+          Prism::Location.json_create(hash["@location"]),
+          JSON.parse(hash["@comments"]),
+        )
+      when "Accessor"
+        Accessor.new(
+          hash["@name"],
+          hash["@file_path"],
+          Prism::Location.json_create(hash["@location"]),
+          JSON.parse(hash["@comments"]),
+          JSON.parse(hash["@owner"]),
+        )
+      when "SingletonMethod"
+        SingletonMethod.new(
+          hash["@name"],
+          hash["@file_path"],
+          Prism::Location.json_create(hash["@location"]),
+          JSON.parse(hash["@comments"]),
+          Prism::ParametersNode.json_create(hash["@parameters_node"]),
+          JSON.parse(hash["@owner"]),
+        )
+      when "InstanceMethod"
+        InstanceMethod.new(
+          hash["@name"],
+          hash["@file_path"],
+          Prism::Location.json_create(hash["@location"]),
+          JSON.parse(hash["@comments"]),
+          Prism::ParametersNode.json_create(hash["@parameters_node"]),
+          JSON.parse(hash["@owner"]),
+        )
+      when "UnresolvedAlias"
+        UnresolvedAlias.new(
+          hash["@target"],
+          JSON.parse(hash["@nesting"]),
+          hash["@name"],
+          hash["@file_path"],
+          Prism::Location.json_create(hash["@location"]),
+          JSON.parse(hash["@comments"]),
+        )
+      when "Alias"
+        Alias.new(
+          hash["@target"],
+          UnresolvedAlias.json_create(JSON.parse(hash["@unresolved_alias"])),
+        )
+      else
+        raise StandardError, "Unknown entry kind: #{entry_kind}"
+      end
     end
 
     class Namespace < Entry
@@ -60,9 +188,20 @@ module RubyIndexer
       def short_name
         T.must(@name.split("::").last)
       end
+
+      sig { abstract.params(args: T.untyped).returns(String) }
+      def to_json(*args); end
     end
 
     class Module < Namespace
+      extend T::Sig
+
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "Module",
+        }.to_json
+      end
     end
 
     class Class < Namespace
