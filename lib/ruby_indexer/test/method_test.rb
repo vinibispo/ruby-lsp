@@ -285,5 +285,134 @@ module RubyIndexer
 
       assert_no_entry("bar")
     end
+
+    def test_accessor_serialization_with_owner
+      index(<<~RUBY)
+        class Foo
+          attr_reader :bar
+        end
+      RUBY
+
+      entry = T.must(@index["bar"].first)
+
+      expected_json = {
+        "kind" => "Accessor",
+        "name" => "bar",
+        "file_path" => "/fake/path/foo.rb",
+        "location" => {
+          "start_line" => 2,
+          "end_line" => 2,
+          "start_column" => 15,
+          "end_column" => 18,
+        },
+        "comments" => [],
+        "owner" => {
+          "kind" => "Class",
+          "name" => "Foo",
+          "file_path" => "/fake/path/foo.rb",
+          "location" => {
+            "start_line" => 1,
+            "end_line" => 3,
+            "start_column" => 0,
+            "end_column" => 3,
+          },
+          "comments" => [],
+          "parent_class" => nil,
+        },
+      }.to_json
+
+      assert_entry_serialization(expected_json, entry)
+    end
+
+    def test_instance_method_serialization_with_parameters
+      index(<<~RUBY)
+        class Foo
+          def bar(a, b = 123, *c, d:, e: 456, **f, &g)
+          end
+        end
+      RUBY
+
+      entry = T.must(@index["bar"].first)
+
+      expected_json = {
+        "kind" => "InstanceMethod",
+        "name" => "bar",
+        "file_path" => "/fake/path/foo.rb",
+        "location" => {
+          "start_line" => 2,
+          "end_line" => 3,
+          "start_column" => 2,
+          "end_column" => 5,
+        },
+        "comments" => [],
+        "parameters" => [
+          {
+            "kind" => "RequiredParameter",
+            "name" => "a",
+          },
+          { "kind" => "OptionalParameter", "name" => "b" },
+          { "kind" => "KeywordParameter", "name" => "d" },
+          { "kind" => "OptionalKeywordParameter", "name" => "e" },
+          { "kind" => "RestParameter", "name" => "c" },
+          { "kind" => "KeywordRestParameter", "name" => "f" },
+          { "kind" => "BlockParameter", "name" => "g" },
+        ],
+        "owner" => {
+          "kind" => "Class",
+          "name" => "Foo",
+          "file_path" => "/fake/path/foo.rb",
+          "location" => {
+            "start_line" => 1,
+            "end_line" => 4,
+            "start_column" => 0,
+            "end_column" => 3,
+          },
+          "comments" => [],
+          "parent_class" => nil,
+        },
+      }
+
+      assert_entry_serialization(expected_json.to_json, entry)
+    end
+
+    def test_singleton_method_serialization_without_parameters
+      index(<<~RUBY)
+        class Foo
+          def self.bar
+          end
+        end
+      RUBY
+
+      entry = T.must(@index["bar"].first)
+
+      expected_json = {
+        "kind" => "SingletonMethod",
+        "name" => "bar",
+        "file_path" => "/fake/path/foo.rb",
+        "location" => {
+          "start_line" => 2,
+          "end_line" => 3,
+          "start_column" => 2,
+          "end_column" => 5,
+        },
+        "comments" => [],
+        "parameters" => [],
+        "owner" => {
+          "kind" => "Class",
+          "name" => "Foo",
+          "file_path" => "/fake/path/foo.rb",
+          "location" => {
+            "start_line" => 1,
+            "end_line" => 4,
+            "start_column" => 0,
+            "end_column" => 3,
+          },
+          "comments" => [],
+          "parent_class" => nil,
+        },
+      }
+
+      assert_entry_serialization(expected_json.to_json, entry)
+    end
   end
 end

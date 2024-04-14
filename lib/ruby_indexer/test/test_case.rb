@@ -42,5 +42,13 @@ module RubyIndexer
     def assert_no_entry(entry)
       refute(@index.instance_variable_get(:@entries).key?(entry), "Expected '#{entry}' to not be indexed")
     end
+
+    def assert_entry_serialization(expected_json, entry)
+      json_representation = entry.to_json
+      assert_equal(JSON.parse(expected_json), JSON.parse(json_representation))
+
+      recreated_entry = entry.class.json_create(JSON.parse(json_representation))
+      assert_equal(entry, recreated_entry)
+    end
   end
 end

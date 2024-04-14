@@ -373,5 +373,56 @@ module RubyIndexer
       constant_path_references = T.must(@index["ConstantPathReferences"][0])
       assert_equal(["Foo::Bar", "Foo::Bar2"], constant_path_references.prepended_modules)
     end
+
+    def test_module_serialization
+      index(<<~RUBY)
+        module Foo
+          def something; end
+        end
+      RUBY
+
+      entry = T.must(@index["Foo"].first)
+
+      expected_json = {
+        "kind" => "Module",
+        "name" => "Foo",
+        "file_path" => "/fake/path/foo.rb",
+        "location" => {
+          "start_line" => 1,
+          "end_line" => 3,
+          "start_column" => 0,
+          "end_column" => 3,
+        },
+        "comments" => [],
+      }.to_json
+
+      assert_entry_serialization(expected_json, entry)
+    end
+
+    def test_class_serialization
+      index(<<~RUBY)
+        class Foo < Bar
+          def something; end
+        end
+      RUBY
+
+      entry = T.must(@index["Foo"].first)
+
+      expected_json = {
+        "kind" => "Class",
+        "name" => "Foo",
+        "file_path" => "/fake/path/foo.rb",
+        "location" => {
+          "start_line" => 1,
+          "end_line" => 3,
+          "start_column" => 0,
+          "end_column" => 3,
+        },
+        "comments" => [],
+        "parent_class" => "Bar",
+      }.to_json
+
+      assert_entry_serialization(expected_json, entry)
+    end
   end
 end

@@ -387,5 +387,81 @@ module RubyIndexer
       assert_entry("This", Entry::Constant, "/fake/path/foo.rb:2-0:2-4")
       assert_entry("That", Entry::Constant, "/fake/path/foo.rb:2-6:2-10")
     end
+
+    def test_constant_serialization
+      index(<<~RUBY)
+        FOO = 1
+      RUBY
+
+      entry = @index["FOO"].first
+
+      expected_json = {
+        "kind" => "Constant",
+        "name" => "FOO",
+        "file_path" => "/fake/path/foo.rb",
+        "location" => {
+          "start_line" => 1,
+          "end_line" => 1,
+          "start_column" => 0,
+          "end_column" => 7,
+        },
+        "comments" => [],
+      }.to_json
+
+      assert_entry_serialization(expected_json, entry)
+    end
+
+    def test_unresolved_alias_serialization
+      index(<<~RUBY)
+        module A
+          B = C = 1
+        end
+      RUBY
+
+      entry = @index["A::B"].first
+
+      expected_json = {
+        "kind" => "UnresolvedAlias",
+        "name" => "A::B",
+        "file_path" => "/fake/path/foo.rb",
+        "location" => {
+          "start_line" => 2,
+          "end_line" => 2,
+          "start_column" => 2,
+          "end_column" => 11,
+        },
+        "comments" => [],
+        "target" => "C",
+        "nesting" => ["A"],
+      }.to_json
+
+      assert_entry_serialization(expected_json, entry)
+    end
+
+    def test_alias_serialization
+      index(<<~RUBY)
+        module A
+          B = C = 1
+        end
+      RUBY
+
+      entry = @index.resolve("A::B", []).first
+
+      expected_json = {
+        "kind" => "Alias",
+        "target" => "A::C",
+        "name" => "A::B",
+        "file_path" => "/fake/path/foo.rb",
+        "location" => {
+          "start_line" => 2,
+          "end_line" => 2,
+          "start_column" => 2,
+          "end_column" => 11,
+        },
+        "comments" => [],
+      }.to_json
+
+      assert_entry_serialization(expected_json, entry)
+    end
   end
 end

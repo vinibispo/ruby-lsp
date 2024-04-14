@@ -4,6 +4,9 @@
 module RubyIndexer
   class Entry
     extend T::Sig
+    extend T::Helpers
+
+    abstract!
 
     sig { returns(String) }
     attr_reader :name
@@ -49,6 +52,17 @@ module RubyIndexer
       )
     end
 
+    sig { abstract.params(args: T.untyped).returns(String) }
+    def to_json(*args); end
+
+    sig { abstract.params(hash: T::Hash[String, T.untyped]).returns(T.attached_class) }
+    def self.json_create(hash); end
+
+    sig { params(other: Object).returns(T::Boolean) }
+    def ==(other)
+      other.is_a?(self.class) && other.file_path == file_path && other.location == location
+    end
+
     sig { returns(String) }
     def file_name
       File.basename(@file_path)
@@ -87,6 +101,28 @@ module RubyIndexer
     end
 
     class Module < Namespace
+      extend T::Sig
+
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "Module",
+          name: @name,
+          file_path: @file_path,
+          location: @location,
+          comments: @comments,
+        }.to_json
+      end
+
+      sig { override.params(hash: T::Hash[String, T.untyped]).returns(T.attached_class) }
+      def self.json_create(hash)
+        new(
+          hash["name"],
+          hash["file_path"],
+          RubyIndexer::Location.json_create(hash["location"]),
+          hash["comments"],
+        )
+      end
     end
 
     class Class < Namespace
@@ -110,9 +146,54 @@ module RubyIndexer
         super(name, file_path, location, comments)
         @parent_class = T.let(parent_class, T.nilable(String))
       end
+
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "Class",
+          name: @name,
+          file_path: @file_path,
+          location: @location,
+          comments: @comments,
+          parent_class: @parent_class,
+        }.to_json
+      end
+
+      sig { override.params(hash: T::Hash[String, T.untyped]).returns(T.attached_class) }
+      def self.json_create(hash)
+        new(
+          hash["name"],
+          hash["file_path"],
+          RubyIndexer::Location.json_create(hash["location"]),
+          hash["comments"],
+          hash["parent_class"],
+        )
+      end
     end
 
     class Constant < Entry
+      extend T::Sig
+
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "Constant",
+          name: @name,
+          file_path: @file_path,
+          location: @location,
+          comments: @comments,
+        }.to_json
+      end
+
+      sig { override.params(hash: T::Hash[String, T.untyped]).returns(T.attached_class) }
+      def self.json_create(hash)
+        new(
+          hash["name"],
+          hash["file_path"],
+          RubyIndexer::Location.json_create(hash["location"]),
+          hash["comments"],
+        )
+      end
     end
 
     class Parameter
@@ -132,14 +213,36 @@ module RubyIndexer
       def initialize(name:)
         @name = name
       end
+
+      sig { abstract.params(args: T.untyped).returns(String) }
+      def to_json(*args); end
+
+      sig { params(other: Object).returns(T::Boolean) }
+      def ==(other)
+        other.is_a?(self.class) && other.name == name
+      end
     end
 
     # A required method parameter, e.g. `def foo(a)`
     class RequiredParameter < Parameter
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "RequiredParameter",
+          name: @name,
+        }.to_json
+      end
     end
 
     # An optional method parameter, e.g. `def foo(a = 123)`
     class OptionalParameter < Parameter
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "OptionalParameter",
+          name: @name,
+        }.to_json
+      end
     end
 
     # An required keyword method parameter, e.g. `def foo(a:)`
@@ -148,6 +251,14 @@ module RubyIndexer
       def decorated_name
         :"#{@name}:"
       end
+
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "KeywordParameter",
+          name: @name,
+        }.to_json
+      end
     end
 
     # An optional keyword method parameter, e.g. `def foo(a: 123)`
@@ -155,6 +266,14 @@ module RubyIndexer
       sig { override.returns(Symbol) }
       def decorated_name
         :"#{@name}:"
+      end
+
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "OptionalKeywordParameter",
+          name: @name,
+        }.to_json
       end
     end
 
@@ -166,6 +285,14 @@ module RubyIndexer
       def decorated_name
         :"*#{@name}"
       end
+
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "RestParameter",
+          name: @name,
+        }.to_json
+      end
     end
 
     # A keyword rest method parameter, e.g. `def foo(**a)`
@@ -176,6 +303,14 @@ module RubyIndexer
       def decorated_name
         :"**#{@name}"
       end
+
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "KeywordRestParameter",
+          name: @name,
+        }.to_json
+      end
     end
 
     # A block method parameter, e.g. `def foo(&block)`
@@ -185,6 +320,14 @@ module RubyIndexer
       sig { override.returns(Symbol) }
       def decorated_name
         :"&#{@name}"
+      end
+
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "BlockParameter",
+          name: @name,
+        }.to_json
       end
     end
 
@@ -224,6 +367,38 @@ module RubyIndexer
         params << RequiredParameter.new(name: name.delete_suffix("=").to_sym) if name.end_with?("=")
         params
       end
+
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "Accessor",
+          name: @name,
+          file_path: @file_path,
+          location: @location,
+          comments: @comments,
+          owner: @owner,
+        }.to_json
+      end
+
+      sig { override.params(hash: T::Hash[String, T.untyped]).returns(T.attached_class) }
+      def self.json_create(hash)
+        owner_kind = hash.dig("owner", "kind")
+
+        owner = case owner_kind
+        when "Module"
+          Module.json_create(hash["owner"])
+        when "Class"
+          Class.json_create(hash["owner"])
+        end
+
+        new(
+          hash["name"],
+          hash["file_path"],
+          RubyIndexer::Location.json_create(hash["location"]),
+          hash["comments"],
+          owner,
+        )
+      end
     end
 
     class Method < Member
@@ -241,14 +416,21 @@ module RubyIndexer
           file_path: String,
           location: T.any(Prism::Location, RubyIndexer::Location),
           comments: T::Array[String],
-          parameters_node: T.nilable(Prism::ParametersNode),
+          parameters: T.nilable(T.any(Prism::ParametersNode, T::Array[Parameter])),
           owner: T.nilable(Entry::Namespace),
         ).void
       end
-      def initialize(name, file_path, location, comments, parameters_node, owner) # rubocop:disable Metrics/ParameterLists
+      def initialize(name, file_path, location, comments, parameters, owner) # rubocop:disable Metrics/ParameterLists
         super(name, file_path, location, comments, owner)
 
-        @parameters = T.let(list_params(parameters_node), T::Array[Parameter])
+        @parameters = T.let(
+          if parameters.is_a?(Array)
+            parameters
+          else
+            list_params(parameters)
+          end,
+          T::Array[Parameter],
+        )
       end
 
       private
@@ -339,9 +521,85 @@ module RubyIndexer
     end
 
     class SingletonMethod < Method
+      extend T::Sig
+
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "SingletonMethod",
+          name: @name,
+          file_path: @file_path,
+          location: @location,
+          comments: @comments,
+          parameters: @parameters,
+          owner: @owner,
+        }.to_json
+      end
+
+      sig { override.params(hash: T::Hash[String, T.untyped]).returns(T.attached_class) }
+      def self.json_create(hash)
+        owner_kind = hash.dig("owner", "kind")
+
+        owner = case owner_kind
+        when "Module"
+          Module.json_create(hash["owner"])
+        when "Class"
+          Class.json_create(hash["owner"])
+        end
+
+        parameters = hash["parameters"].map do |parameter_hash|
+          const_get(parameter_hash["kind"]).new(name: parameter_hash["name"].to_sym)
+        end
+
+        new(
+          hash["name"],
+          hash["file_path"],
+          RubyIndexer::Location.json_create(hash["location"]),
+          hash["comments"],
+          parameters,
+          owner,
+        )
+      end
     end
 
     class InstanceMethod < Method
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "InstanceMethod",
+          name: @name,
+          file_path: @file_path,
+          location: @location,
+          comments: @comments,
+          parameters: @parameters,
+          owner: @owner,
+        }.to_json
+      end
+
+      sig { override.params(hash: T::Hash[String, T.untyped]).returns(T.attached_class) }
+      def self.json_create(hash)
+        owner_kind = hash.dig("owner", "kind")
+
+        owner = case owner_kind
+        when "Module"
+          Module.json_create(hash["owner"])
+        when "Class"
+          Class.json_create(hash["owner"])
+        end
+
+        parameters = hash["parameters"].map do |parameter_hash|
+          const_get(parameter_hash["kind"]).new(name: parameter_hash["name"].to_sym)
+        end
+
+        new(
+          hash["name"],
+          hash["file_path"],
+          RubyIndexer::Location.json_create(hash["location"]),
+          hash["comments"],
+          parameters,
+          owner,
+        )
+      end
     end
 
     # An UnresolvedAlias points to a constant alias with a right hand side that has not yet been resolved. For
@@ -379,6 +637,31 @@ module RubyIndexer
         @target = target
         @nesting = nesting
       end
+
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "UnresolvedAlias",
+          name: @name,
+          file_path: @file_path,
+          location: @location,
+          comments: @comments,
+          target: @target,
+          nesting: @nesting,
+        }.to_json
+      end
+
+      sig { override.params(hash: T::Hash[String, T.untyped]).returns(T.attached_class) }
+      def self.json_create(hash)
+        new(
+          hash["target"],
+          hash["nesting"],
+          hash["name"],
+          hash["file_path"],
+          RubyIndexer::Location.json_create(hash["location"]),
+          hash["comments"],
+        )
+      end
     end
 
     # Alias represents a resolved alias, which points to an existing constant target
@@ -388,11 +671,48 @@ module RubyIndexer
       sig { returns(String) }
       attr_reader :target
 
-      sig { params(target: String, unresolved_alias: UnresolvedAlias).void }
+      sig do
+        params(
+          target: String,
+          unresolved_alias: T.any(
+            UnresolvedAlias,
+            [String, String, T.any(Prism::Location, RubyIndexer::Location), T::Array[String]],
+          ),
+        ).void
+      end
       def initialize(target, unresolved_alias)
-        super(unresolved_alias.name, unresolved_alias.file_path, unresolved_alias.location, unresolved_alias.comments)
+        if unresolved_alias.is_a?(UnresolvedAlias)
+          super(unresolved_alias.name, unresolved_alias.file_path, unresolved_alias.location, unresolved_alias.comments)
+        else
+          super(*unresolved_alias)
+        end
 
         @target = target
+      end
+
+      sig { override.params(args: T.untyped).returns(String) }
+      def to_json(*args)
+        {
+          kind: "Alias",
+          target: @target,
+          name: @name,
+          file_path: @file_path,
+          location: @location,
+          comments: @comments,
+        }.to_json
+      end
+
+      sig { override.params(hash: T::Hash[String, T.untyped]).returns(T.attached_class) }
+      def self.json_create(hash)
+        new(
+          hash["target"],
+          [
+            hash["name"],
+            hash["file_path"],
+            RubyIndexer::Location.json_create(hash["location"]),
+            hash["comments"],
+          ],
+        )
       end
     end
   end

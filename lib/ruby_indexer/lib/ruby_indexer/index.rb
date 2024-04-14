@@ -255,6 +255,37 @@ module RubyIndexer
       )
     end
 
+    sig { void }
+    def import_from_cache
+      cache_dir = File.join(".ruby-lsp", "cache")
+      return unless File.exist?(cache_dir)
+
+      Dir.glob("#{cache_dir}/*").each do |cache_file|
+        JSON.parse(File.read(cache_file)).each do |entry|
+          entry = RubyIndexer::Entry.const_get(entry["kind"]).json_create(entry)
+          self << entry
+        end
+      end
+    end
+
+    sig { void }
+    def export_to_cache
+      # TODO: consider gemfiles that point to github (e.g., Rails in Core)
+
+      grouped = @files_to_entries.select do |path, entries|
+        path.start_with?(Bundler.bundle_path.to_s)
+      end.group_by do |path, entries|
+        Pathname.new(path).relative_path_from(Bundler.bundle_path.join("gems")).each_filename.first
+      end
+
+      grouped.each do |group_name, paths|
+        cache_path = File.join(".ruby-lsp", "cache", group_name)
+        unless File.exist?(cache_path)
+          File.write(cache_path, paths.flat_map(&:last).to_json)
+        end
+      end
+    end
+
     private
 
     # Attempts to resolve an UnresolvedAlias into a resolved Alias. If the unresolved alias is pointing to a constant
