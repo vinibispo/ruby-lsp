@@ -200,7 +200,7 @@ module RubyLsp
 
       # When not updating, we run `(bundle check || bundle install)`
       # When updating, we run `((bundle check && bundle update ruby-lsp debug) || bundle install)`
-      command = +"(bundle check"
+      command = +"bundle install"
 
       if should_bundle_update?
         # If any of `ruby-lsp`, `ruby-lsp-rails` or `debug` are not in the Gemfile, try to update them to the latest
@@ -217,11 +217,9 @@ module RubyLsp
         @last_updated_path.write(Time.now.iso8601)
       end
 
-      command << " || bundle install) "
-
       # Redirect stdout to stderr to prevent going into an infinite loop. The extension might confuse stdout output with
       # responses
-      command << "1>&2"
+      command << " 1>&2"
 
       # Add bundle update
       $stderr.puts("Ruby LSP> Running bundle install for the custom bundle. This may take a while...")
