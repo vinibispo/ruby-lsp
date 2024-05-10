@@ -169,6 +169,27 @@ module RubyIndexer
       ).void
     end
     def index_all(indexable_paths: RubyIndexer.configuration.indexables, &block)
+      cache_dir = Pathname.new(".ruby-lsp").join("cache")
+
+      imported_cache_keys = if cache_dir.exist?
+        specs = Gem::Specification.default_stubs.to_h { |t| ["#{t.name}-#{t.version}", true] }
+        locked_specs = Bundler.locked_gems&.specs&.to_h { |t| ["#{t.name}-#{t.version}", true] }
+        specs.merge!(locked_specs) if locked_specs
+
+        cache_dir.children.filter_map do |cache_path|
+          key = cache_path.basename.to_s
+          next unless specs[key]
+
+          JSON.parse(cache_path.read).each do |entry|
+            self << RubyIndexer::Entry.const_get(entry["kind"]).json_create(entry) # rubocop:disable Sorbet/ConstantsFromStrings
+          end
+
+          key
+        end
+      else
+        []
+      end
+
       # Calculate how many paths are worth 1% of progress
       progress_step = (indexable_paths.length / 100.0).ceil
 
@@ -177,6 +198,8 @@ module RubyIndexer
           progress = (index / progress_step) + 1
           break unless block.call(progress)
         end
+
+        next if imported_cache_keys.include?(path.cache_key)
 
         index_single(path)
       end
@@ -255,6 +278,38 @@ module RubyIndexer
         end,
         T::Array[Entry::Member],
       )
+    end
+
+    sig { void }
+    def import_from_cache
+      cache_dir = Pathname.new(".ruby-lsp").join("cache")
+      return unless cache_dir.exist?
+
+      cache_dir.children.each do |cache_path|
+        JSON.parse(cache_path.read).each do |entry|
+          self << RubyIndexer::Entry.const_get(entry["kind"]).json_create(entry) # rubocop:disable Sorbet/ConstantsFromStrings
+        end
+      end
+    end
+
+    sig { void }
+    def export_to_cache
+      # TODO: consider gemfiles that point to github (e.g., Rails in Core)
+      bundle_path = Bundler.bundle_path.to_s
+      gems_path = Bundler.bundle_path.join("gems")
+
+      grouped = @files_to_entries
+        .select { |path, _entries| path.start_with?(bundle_path) }
+        .group_by { |path, _entries| T.must(Pathname.new(path).relative_path_from(gems_path).each_filename.first) }
+
+      cache_dir = Pathname.new(".ruby-lsp").join("cache")
+      cache_dir.rmtree if cache_dir.exist?
+      cache_dir.mkpath
+
+      grouped.each do |group_name, paths|
+        cache_path = cache_dir.join(group_name)
+        cache_path.write(paths.flat_map(&:last).to_json) unless cache_path.exist?
+      end
     end
 
     private

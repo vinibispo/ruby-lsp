@@ -679,6 +679,7 @@ module RubyLsp
 
     sig { override.void }
     def shutdown
+      @global_state.index.export_to_cache
       Addon.addons.each(&:deactivate)
     end
 

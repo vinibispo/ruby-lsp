@@ -76,6 +76,8 @@ module RubyIndexer
         end
       end
 
+      name_version_map = Gem::Specification.default_stubs.to_h { |s| [s.name, s.version] }
+
       # Add default gems to the list of files to be indexed
       Dir.glob(File.join(RbConfig::CONFIG["rubylibdir"], "*")).each do |default_path|
         # The default_path might be a Ruby file or a folder with the gem's name. For example:
@@ -100,34 +102,42 @@ module RubyIndexer
           true
         end
 
+        cache_key = "#{short_name}-#{name_version_map[short_name.downcase]}"
+
         if pathname.directory?
           # If the default_path is a directory, we index all the Ruby files in it
           indexables.concat(
             Dir.glob(File.join(default_path, "**", "*.rb"), File::FNM_PATHNAME | File::FNM_EXTGLOB).map! do |path|
-              IndexablePath.new(RbConfig::CONFIG["rubylibdir"], path)
+              IndexablePath.new(RbConfig::CONFIG["rubylibdir"], path, cache_key: cache_key)
             end,
           )
         elsif pathname.extname == ".rb"
           # If the default_path is a Ruby file, we index it
-          indexables << IndexablePath.new(RbConfig::CONFIG["rubylibdir"], default_path)
+          indexables << IndexablePath.new(RbConfig::CONFIG["rubylibdir"], default_path, cache_key: cache_key)
         end
       end
 
       # Add the locked gems to the list of files to be indexed
       locked_gems&.each do |lazy_spec|
-        next if excluded_gems.include?(lazy_spec.name)
+        name = lazy_spec.name
+        next if excluded_gems.include?(name)
 
-        spec = Gem::Specification.find_by_name(lazy_spec.name)
+        spec = Gem::Specification.find_by_name(name)
 
         # When working on a gem, it will be included in the locked_gems list. Since these are the project's own files,
         # we have already included and handled exclude patterns for it and should not re-include or it'll lead to
         # duplicates or accidentally ignoring exclude patterns
         next if spec.full_gem_path == Dir.pwd
 
+        cache_key = "#{name}-#{spec.version}"
+
         indexables.concat(
           spec.require_paths.flat_map do |require_path|
             load_path_entry = File.join(spec.full_gem_path, require_path)
-            Dir.glob(File.join(load_path_entry, "**", "*.rb")).map! { |path| IndexablePath.new(load_path_entry, path) }
+
+            Dir.glob(File.join(load_path_entry, "**", "*.rb")).map! do |path|
+              IndexablePath.new(load_path_entry, path, cache_key: cache_key)
+            end
           end,
         )
       rescue Gem::MissingSpecError
