@@ -70,6 +70,8 @@ module RubyLsp
         text_document_definition(message)
       when "workspace/didChangeWatchedFiles"
         workspace_did_change_watched_files(message)
+      when "textDocument/references"
+        text_document_references(message)
       when "workspace/symbol"
         workspace_symbol(message)
       when "rubyLsp/textDocument/showSyntaxTree"
@@ -591,6 +593,26 @@ module RubyLsp
         Result.new(
           id: message[:id],
           response: Requests::Definition.new(
+            document,
+            @global_state,
+            params[:position],
+            dispatcher,
+            typechecker_enabled?(document),
+          ).perform,
+        ),
+      )
+    end
+
+    sig { params(message: T::Hash[Symbol, T.untyped]).void }
+    def text_document_references(message)
+      params = message[:params]
+      dispatcher = Prism::Dispatcher.new
+      document = @store.get(params.dig(:textDocument, :uri))
+
+      send_message(
+        Result.new(
+          id: message[:id],
+          response: Requests::References.new(
             document,
             @global_state,
             params[:position],
