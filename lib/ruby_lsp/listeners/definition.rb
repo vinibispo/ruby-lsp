@@ -30,14 +30,22 @@ module RubyLsp
         dispatcher.register(
           self,
           :on_call_node_enter,
+          :on_call_node_leave,
           :on_block_argument_node_enter,
           :on_constant_read_node_enter,
           :on_constant_path_node_enter,
+          :on_symbol_node_enter,
         )
+      end
+
+      sig { params(node: Prism::SymbolNode).void }
+      def on_symbol_node_enter(node)
+        binding.break
       end
 
       sig { params(node: Prism::CallNode).void }
       def on_call_node_enter(node)
+        binding.break
         message = node.name
 
         if message == :require || message == :require_relative
@@ -45,6 +53,11 @@ module RubyLsp
         else
           handle_method_definition(message.to_s, self_receiver?(node))
         end
+      end
+
+      sig { params(node: Prism::CallNode).void }
+      def on_call_node_leave(node)
+        binding.break
       end
 
       sig { params(node: Prism::BlockArgumentNode).void }

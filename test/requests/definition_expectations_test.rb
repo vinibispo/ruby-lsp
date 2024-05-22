@@ -253,6 +253,29 @@ class DefinitionExpectationsTest < ExpectationsTestRunner
     end
   end
 
+  def test_XYZ
+    source = <<~RUBY
+      # typed: false
+
+      class A
+        def bar
+          foo :bar
+        end
+
+        def foo; end
+      end
+    RUBY
+
+    with_server(source) do |server, uri|
+      server.process_message(
+        id: 1,
+        method: "textDocument/definition",
+        params: { textDocument: { uri: uri }, position: { character: 10, line: 4 } },
+      )
+      assert_equal(uri.to_s, server.pop_response.response.first.attributes[:uri])
+    end
+  end
+
   def test_can_jump_to_method_with_two_definitions
     first_source = <<~RUBY
       # typed: false
