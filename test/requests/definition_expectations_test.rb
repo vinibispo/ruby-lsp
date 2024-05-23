@@ -272,6 +272,7 @@ class DefinitionExpectationsTest < ExpectationsTestRunner
         method: "textDocument/definition",
         params: { textDocument: { uri: uri }, position: { character: 10, line: 4 } },
       )
+      binding.break
       assert_equal(uri.to_s, server.pop_response.response.first.attributes[:uri])
     end
   end

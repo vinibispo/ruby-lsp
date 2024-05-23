@@ -40,7 +40,8 @@ module RubyLsp
 
       sig { params(node: Prism::SymbolNode).void }
       def on_symbol_node_enter(node)
-        binding.break
+        # binding.break
+        # methods = @index.resolve_method(message, @nesting.join("::"))
       end
 
       sig { params(node: Prism::CallNode).void }

@@ -18,6 +18,7 @@ module RubyLsp
     # - Constants
     # - Require paths
     # - Methods invoked on self only
+    # - Symbol literals (for addons to provide custom behavior, e.g. Rails DSLs)
     #
     # # Example
     #
@@ -49,15 +50,16 @@ module RubyLsp
         target, parent, nesting = document.locate_node(
           position,
           node_types: [
+            Prism::SymbolNode,
             Prism::CallNode,
             Prism::ConstantReadNode,
             Prism::ConstantPathNode,
             Prism::BlockArgumentNode,
-            Prism::SymbolNode,
           ],
         )
-
-        if target.is_a?(Prism::ConstantReadNode) && parent.is_a?(Prism::ConstantPathNode)
+        if target.is_a?(Prism::SymbolNode) && parent.is_a?(Prism::CallNode)
+          binding.break
+        elsif target.is_a?(Prism::ConstantReadNode) && parent.is_a?(Prism::ConstantPathNode)
           # If the target is part of a constant path node, we need to find the exact portion of the constant that the
           # user is requesting to go to definition for
           target = determine_target(
