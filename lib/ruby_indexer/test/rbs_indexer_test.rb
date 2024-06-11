@@ -25,5 +25,20 @@ module RubyIndexer
       assert_equal(0, entry.location.start_column)
       assert_operator(entry.location.end_column, :>, 0)
     end
+
+    def test_index_core_modules
+      entries = @index["Comparable"]
+      refute_nil(entries)
+      assert_equal(1, entries.length)
+      entry = entries.first
+      assert_match(%r{/gems/rbs-.*/core/comparable.rbs}, entry.file_path)
+      assert_equal("comparable.rbs", entry.file_name)
+
+      # Using fixed positions would be fragile, so let's just check some basics.
+      assert_operator(entry.location.start_line, :>, 0)
+      assert_operator(entry.location.end_line, :>, entry.location.start_line)
+      assert_equal(0, entry.location.start_column)
+      assert_operator(entry.location.end_column, :>, 0)
+    end
   end
 end

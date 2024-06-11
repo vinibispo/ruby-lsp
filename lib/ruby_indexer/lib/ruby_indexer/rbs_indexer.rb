@@ -34,6 +34,8 @@ module RubyIndexer
       case declaration
       when RBS::AST::Declarations::Class
         handle_class_declaration(declaration, pathname)
+      when RBS::AST::Declarations::Module
+        handle_module_declaration(declaration, pathname)
       else # rubocop:disable Style/EmptyElse
         # Other kinds not yet handled
       end
@@ -58,6 +60,16 @@ module RubyIndexer
         rbs_location.start_column,
         rbs_location.end_column,
       )
+    end
+
+    sig { params(declaration: RBS::AST::Declarations::Module, pathname: Pathname).void }
+    def handle_module_declaration(declaration, pathname)
+      nesting = [declaration.name.name.to_s]
+      file_path = pathname.to_s
+      location = to_ruby_indexer_location(declaration.location)
+      comments = Array(declaration.comment&.string)
+      module_entry = Entry::Module.new(nesting, file_path, location, comments)
+      @index << module_entry
     end
   end
 end
