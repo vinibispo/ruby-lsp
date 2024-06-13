@@ -4,7 +4,7 @@
 begin
   require "rbs"
 rescue LoadError
-  exit
+  return
 end
 
 

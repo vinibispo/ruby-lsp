@@ -18,8 +18,9 @@ require "set"
 require "prism"
 require "prism/visitor"
 require "language_server-protocol"
+
 begin
-require "rbs"
+  require "rbs"
 rescue LoadError
 end
 
