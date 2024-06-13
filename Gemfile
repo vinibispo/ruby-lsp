@@ -6,7 +6,6 @@ gemspec
 
 group :development do
   gem "bundler", "~> 2.5"
-  gem "debug", "~> 1.9", require: false, platforms: [:mri, :mingw, :x64_mingw]
   gem "minitest-reporters", "~> 1.6"
   gem "minitest", "~> 5.23"
   gem "mocha", "~> 2.3"
@@ -26,5 +25,6 @@ group :development do
     # sorbet-static is not available on Windows. We also skip Tapioca since it depends on sorbet-static-and-runtime
     gem "sorbet-static-and-runtime"
     gem "tapioca", "~> 0.13", require: false
+    gem "debug", "~> 1.9", require: false, platforms: [:mri, :mingw, :x64_mingw]
   end
 end
