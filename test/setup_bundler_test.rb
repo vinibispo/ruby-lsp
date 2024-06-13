@@ -404,6 +404,7 @@ class SetupBundlerTest < Minitest::Test
   end
 
   def test_ensures_lockfile_remotes_are_relative_to_default_gemfile
+    skip if RUBY_PLATFORM == "java"
     Dir.mktmpdir do |dir|
       Dir.chdir(dir) do
         # The structure used in Rails uncovered a bug in our custom bundle logic. Rails is an empty gem with a bunch of

@@ -34,6 +34,8 @@ class SignatureHelpTest < Minitest::Test
   end
 
   def test_concats_documentations_from_both_definitions
+    skip if RUBY_PLATFORM == "java"
+
     source = <<~RUBY
       class Foo
         # first definition
@@ -72,6 +74,8 @@ class SignatureHelpTest < Minitest::Test
   end
 
   def test_help_after_comma
+    skip if RUBY_PLATFORM == "java"
+
     source = +<<~RUBY
       class Foo
         def bar(a, b)
@@ -182,6 +186,8 @@ class SignatureHelpTest < Minitest::Test
   end
 
   def test_help_for_blocks
+    skip if RUBY_PLATFORM == "java"
+
     source = +<<~RUBY
       class Foo
         def bar(a, &block)

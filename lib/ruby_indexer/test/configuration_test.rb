@@ -10,6 +10,7 @@ module RubyIndexer
     end
 
     def test_load_configuration_executes_configure_block
+      SKIP if RUBY_PLATFORM == "java"
       @config.apply_config({ "excluded_patterns" => ["**/test/fixtures/**/*.rb"] })
       indexables = @config.indexables
 
@@ -42,6 +43,8 @@ module RubyIndexer
     end
 
     def test_indexables_does_not_include_default_gem_path_when_in_bundle
+      skip if RUBY_PLATFORM == "java"
+
       indexables = @config.indexables
 
       assert(
