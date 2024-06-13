@@ -1,6 +1,13 @@
 # typed: strict
 # frozen_string_literal: true
 
+begin
+  require "rbs"
+rescue LoadError
+  exit
+end
+
+
 module RubyIndexer
   class RBSIndexer
     extend T::Sig

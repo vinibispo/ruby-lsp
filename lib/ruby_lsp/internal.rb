@@ -18,7 +18,10 @@ require "set"
 require "prism"
 require "prism/visitor"
 require "language_server-protocol"
+begin
 require "rbs"
+rescue LoadError
+end
 
 require "ruby-lsp"
 require "ruby_lsp/base_server"
