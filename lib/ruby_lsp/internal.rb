@@ -19,7 +19,6 @@ require "strscan"
 require "prism"
 require "prism/visitor"
 require "language_server-protocol"
-require "rbs"
 
 require "ruby-lsp"
 require "ruby_lsp/base_server"
