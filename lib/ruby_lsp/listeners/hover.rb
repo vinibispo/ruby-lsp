@@ -21,6 +21,7 @@ module RubyLsp
           Prism::InstanceVariableWriteNode,
           Prism::SymbolNode,
           Prism::StringNode,
+          Prism::YieldNode,
         ],
         T::Array[T.class_of(Prism::Node)],
       )
@@ -64,6 +65,7 @@ module RubyLsp
           :on_instance_variable_operator_write_node_enter,
           :on_instance_variable_or_write_node_enter,
           :on_instance_variable_target_node_enter,
+          :on_yield_node_enter,
         )
       end
 
@@ -147,6 +149,11 @@ module RubyLsp
       sig { params(node: Prism::InstanceVariableTargetNode).void }
       def on_instance_variable_target_node_enter(node)
         handle_instance_variable_hover(node.name.to_s)
+      end
+
+      sig { params(node: Prism::YieldNode).void }
+      def on_yield_node_enter(node)
+        @response_builder.push(static_documentation("yield.md"), category: :documentation)
       end
 
       private
