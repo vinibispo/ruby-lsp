@@ -204,6 +204,13 @@ module RubyLsp
             Constant::SymbolKind::FIELD
           end
         end
+
+        sig { params(name: String).returns(String) }
+        def static_documentation(name)
+          content = File.read(STATIC_DOCS_PATH.join(name))
+          content.gsub!(%r{\[(.*)\]\(static_docs/(.*)\)}, "[\\1](#{STATIC_DOCS_PATH}/\\2)")
+          content
+        end
       end
     end
   end

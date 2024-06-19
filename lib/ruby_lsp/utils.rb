@@ -25,6 +25,7 @@ module RubyLsp
     end,
     String,
   )
+  STATIC_DOCS_PATH = T.let(Pathname.new(__dir__).dirname.dirname.join("static_docs"), Pathname)
 
   # A notification to be sent to the client
   class Message
