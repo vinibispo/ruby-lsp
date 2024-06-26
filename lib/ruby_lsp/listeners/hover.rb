@@ -20,6 +20,7 @@ module RubyLsp
           Prism::InstanceVariableOrWriteNode,
           Prism::InstanceVariableTargetNode,
           Prism::InstanceVariableWriteNode,
+          Prism::ModuleNode,
           Prism::SymbolNode,
           Prism::StringNode,
           Prism::YieldNode,
@@ -60,14 +61,15 @@ module RubyLsp
           :on_constant_write_node_enter,
           :on_constant_path_node_enter,
           :on_call_node_enter,
+          :on_def_node_enter,
           :on_instance_variable_read_node_enter,
           :on_instance_variable_write_node_enter,
           :on_instance_variable_and_write_node_enter,
           :on_instance_variable_operator_write_node_enter,
           :on_instance_variable_or_write_node_enter,
           :on_instance_variable_target_node_enter,
+          :on_module_node_enter,
           :on_yield_node_enter,
-          :on_def_node_enter,
         )
       end
 
@@ -123,6 +125,11 @@ module RubyLsp
         end
       end
 
+      sig { params(node: Prism::DefNode).void }
+      def on_def_node_enter(node)
+        @response_builder.push(static_documentation("def.md"), category: :documentation)
+      end
+
       sig { params(node: Prism::InstanceVariableReadNode).void }
       def on_instance_variable_read_node_enter(node)
         handle_instance_variable_hover(node.name.to_s)
@@ -153,9 +160,9 @@ module RubyLsp
         handle_instance_variable_hover(node.name.to_s)
       end
 
-      sig { params(node: Prism::DefNode).void }
-      def on_def_node_enter(node)
-        @response_builder.push(static_documentation("def.md"), category: :documentation)
+      sig { params(node: Prism::ModuleNode).void }
+      def on_module_node_enter(node)
+        @response_builder.push(static_documentation("module.md"), category: :documentation)
       end
 
       sig { params(node: Prism::YieldNode).void }

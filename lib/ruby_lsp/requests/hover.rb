@@ -61,6 +61,10 @@ module RubyLsp
             !covers_position?(target.def_keyword_loc, position) &&
             !covers_position?(target.end_keyword_loc, position)
           target = nil
+        elsif target.is_a?(Prism::ModuleNode) &&
+            !covers_position?(target.module_keyword_loc, position) &&
+            !covers_position?(target.end_keyword_loc, position)
+          target = nil
         end
 
         # Don't need to instantiate any listeners if there's no target
