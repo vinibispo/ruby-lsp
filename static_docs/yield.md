@@ -1,4 +1,4 @@
-# Yield
+### `yield`
 
 [Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/yield.md)
 
@@ -34,4 +34,4 @@ foo
 # => No block!
 ```
 
-[Read about methods](static_docs/def.md)
+[Read in editor](static_docs/yield.md) | [Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)
