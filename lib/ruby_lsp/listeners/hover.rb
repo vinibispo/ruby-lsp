@@ -13,6 +13,7 @@ module RubyLsp
           Prism::ConstantReadNode,
           Prism::ConstantWriteNode,
           Prism::ConstantPathNode,
+          Prism::DefNode,
           Prism::InstanceVariableReadNode,
           Prism::InstanceVariableAndWriteNode,
           Prism::InstanceVariableOperatorWriteNode,
@@ -66,6 +67,7 @@ module RubyLsp
           :on_instance_variable_or_write_node_enter,
           :on_instance_variable_target_node_enter,
           :on_yield_node_enter,
+          :on_def_node_enter,
         )
       end
 
@@ -149,6 +151,11 @@ module RubyLsp
       sig { params(node: Prism::InstanceVariableTargetNode).void }
       def on_instance_variable_target_node_enter(node)
         handle_instance_variable_hover(node.name.to_s)
+      end
+
+      sig { params(node: Prism::DefNode).void }
+      def on_def_node_enter(node)
+        @response_builder.push(static_documentation("def.md"), category: :documentation)
       end
 
       sig { params(node: Prism::YieldNode).void }
