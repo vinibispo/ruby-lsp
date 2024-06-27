@@ -1,0 +1,3 @@
+### `do`
+
+Starts a block.
