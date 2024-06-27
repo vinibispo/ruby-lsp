@@ -35,6 +35,7 @@ module RubyLsp
           Prism::ModuleNode,
           Prism::NextNode,
           Prism::NilNode,
+          Prism::OrNode,
           Prism::RedoNode,
           Prism::RescueNode,
           Prism::RetryNode,
@@ -108,6 +109,7 @@ module RubyLsp
           :on_module_node_enter,
           :on_next_node_enter,
           :on_nil_node_enter,
+          :on_or_node_enter,
           :on_redo_node_enter,
           :on_rescue_node_enter,
           :on_retry_node_enter,
@@ -284,6 +286,11 @@ module RubyLsp
       sig { params(node: Prism::NilNode).void }
       def on_nil_node_enter(node)
         @response_builder.push(static_documentation("nil.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::OrNode).void }
+      def on_or_node_enter(node)
+        @response_builder.push(static_documentation("or.md"), category: :documentation)
       end
 
       sig { params(node: Prism::RedoNode).void }
