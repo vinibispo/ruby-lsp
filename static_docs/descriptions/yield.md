@@ -1,6 +1,6 @@
 # Yield
 
-[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/yield.md)
+[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/descriptions/yield.md)
 
 In Ruby, any method implicitly accepts a block, even if not included in the argument list. The `yield` keyword invokes the block that was passed as part of the method invocation.
 

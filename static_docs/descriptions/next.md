@@ -1,6 +1,6 @@
 ### `next`
 
-[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/next.md)
+[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/descriptions/next.md)
 
 The `next` keyword is used to skip the rest of the current iteration and proceed to the next iteration in a loop.
 
@@ -11,4 +11,4 @@ for i in 1..5
 end
 ```
 
-[Read in editor](static_docs/next.md) | [Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)
+[Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)

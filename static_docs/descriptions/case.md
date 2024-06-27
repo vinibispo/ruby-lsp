@@ -1,6 +1,6 @@
 ### `case`
 
-[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/case.md)
+[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/descriptions/case.md)
 
 The `case` keyword is used to execute a block of code based on the value of a variable. It provides a more elegant way to handle multiple conditions compared to multiple `if` statements.
 
@@ -16,4 +16,4 @@ else
 end
 ```
 
-[Read in editor](static_docs/case.md) | [Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)
+[Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)

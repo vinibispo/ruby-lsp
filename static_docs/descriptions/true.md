@@ -1,6 +1,6 @@
 ### `true`
 
-[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/true.md)
+[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/descriptions/true.md)
 
 The `true` keyword represents a boolean true value.
 
@@ -8,4 +8,4 @@ The `true` keyword represents a boolean true value.
 puts true
 ```
 
-[Read in editor](static_docs/true.md) | [Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)
+[Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)

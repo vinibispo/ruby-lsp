@@ -1,6 +1,6 @@
 ### `false`
 
-[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/false.md)
+[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/descriptions/false.md)
 
 The `false` keyword represents a boolean false value.
 
@@ -8,4 +8,4 @@ The `false` keyword represents a boolean false value.
 puts false
 ```
 
-[Read in editor](static_docs/false.md) | [Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)
+[Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)

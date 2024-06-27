@@ -1,6 +1,6 @@
 ### `while`
 
-[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/while.md)
+[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/descriptions/while.md)
 
 The `while` keyword is used to create a loop that executes a block of code as long as the specified condition is true.
 
@@ -12,4 +12,4 @@ while counter <= 5
 end
 ```
 
-[Read in editor](static_docs/while.md) | [Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)
+[Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)

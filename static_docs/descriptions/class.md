@@ -1,6 +1,6 @@
 ### `class`
 
-[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/class.md)
+[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/descriptions/class.md)
 
 The `class` keyword is used to define a new class.
 
@@ -12,4 +12,4 @@ class MyClass
 end
 ```
 
-[Read in editor](static_docs/class.md) | [Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)
+[Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)

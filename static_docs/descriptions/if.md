@@ -1,6 +1,6 @@
 ### `if`
 
-[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/if.md)
+[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/descriptions/if.md)
 
 The `if` keyword is used to create a conditional statement.
 
@@ -10,4 +10,4 @@ if condition
 end
 ```
 
-[Read in editor](static_docs/if.md) | [Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)
+[Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)

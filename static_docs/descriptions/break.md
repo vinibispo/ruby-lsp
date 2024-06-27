@@ -1,6 +1,6 @@
 ### `break`
 
-[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/break.md)
+[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/descriptions/break.md)
 
 The `break` keyword is used to exit a loop prematurely.
 
@@ -13,4 +13,4 @@ while i < 10
 end
 ```
 
-[Read in editor](static_docs/break.md) | [Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)
+[Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)

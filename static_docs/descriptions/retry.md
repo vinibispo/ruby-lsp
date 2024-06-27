@@ -1,6 +1,6 @@
 ### `retry`
 
-[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/retry.md)
+[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/descriptions/retry.md)
 
 The `retry` keyword is used to retry a `begin` block from the start if an exception occurs.
 
@@ -14,4 +14,4 @@ rescue
 end
 ```
 
-[Read in editor](static_docs/retry.md) | [Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)
+[Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)

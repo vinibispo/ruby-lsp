@@ -1,6 +1,6 @@
 ### `super`
 
-[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/super.md)
+[Read this documentation in the browser](https://github.com/Shopify/ruby-lsp/blob/main/static_docs/descriptions/super.md)
 
 The `super` keyword is used within a method to call a method of the same name in the superclass. It is useful for extending or modifying the behavior of inherited methods.
 
@@ -24,4 +24,4 @@ dog.speak
 # => Dog barks
 ```
 
-[Read in editor](static_docs/super.md) | [Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)
+[Ruby keywords](https://docs.ruby-lang.org/en/3.3/keywords_rdoc.html)
