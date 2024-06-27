@@ -46,6 +46,7 @@ module RubyLsp
           Prism::SuperNode,
           Prism::SymbolNode,
           Prism::TrueNode,
+          Prism::UndefNode,
           Prism::UnlessNode,
           Prism::UntilNode,
           Prism::WhenNode,
@@ -120,6 +121,7 @@ module RubyLsp
           :on_super_node_enter,
           :on_symbol_node_enter,
           :on_true_node_enter,
+          :on_undef_node_enter,
           :on_unless_node_enter,
           :on_until_node_enter,
           :on_when_node_enter,
@@ -338,6 +340,11 @@ module RubyLsp
       sig { params(node: Prism::TrueNode).void }
       def on_true_node_enter(node)
         @response_builder.push(static_documentation("true.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::UndefNode).void }
+      def on_undef_node_enter(node)
+        @response_builder.push(static_documentation("undef.md"), category: :documentation)
       end
 
       sig { params(node: Prism::UnlessNode).void }
