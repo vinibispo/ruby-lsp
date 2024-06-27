@@ -9,6 +9,8 @@ module RubyLsp
 
       ALLOWED_TARGETS = T.let(
         [
+          Prism::AliasGlobalVariableNode,
+          Prism::AliasMethodNode,
           Prism::BeginNode,
           Prism::BreakNode,
           Prism::CallNode,
@@ -79,6 +81,8 @@ module RubyLsp
 
         dispatcher.register(
           self,
+          :on_alias_global_variable_node_enter,
+          :on_alias_method_node_enter,
           :on_begin_node_enter,
           :on_break_node_enter,
           :on_call_node_enter,
@@ -116,6 +120,16 @@ module RubyLsp
           :on_while_node_enter,
           :on_yield_node_enter,
         )
+      end
+
+      sig { params(node: Prism::AliasGlobalVariableNode).void }
+      def on_alias_global_variable_node_enter(node)
+        @response_builder.push(static_documentation("alias.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::AliasMethodNode).void }
+      def on_alias_method_node_enter(node)
+        @response_builder.push(static_documentation("alias.md"), category: :documentation)
       end
 
       sig { params(node: Prism::BeginNode).void }
