@@ -9,21 +9,42 @@ module RubyLsp
 
       ALLOWED_TARGETS = T.let(
         [
+          Prism::BeginNode,
+          Prism::BreakNode,
           Prism::CallNode,
+          Prism::CaseNode,
+          Prism::ClassNode,
+          Prism::ConstantPathNode,
           Prism::ConstantReadNode,
           Prism::ConstantWriteNode,
-          Prism::ConstantPathNode,
           Prism::DefNode,
-          Prism::InstanceVariableReadNode,
+          Prism::ElseNode,
+          Prism::EnsureNode,
+          Prism::FalseNode,
+          Prism::ForNode,
+          Prism::IfNode,
           Prism::InstanceVariableAndWriteNode,
           Prism::InstanceVariableOperatorWriteNode,
           Prism::InstanceVariableOrWriteNode,
+          Prism::InstanceVariableReadNode,
           Prism::InstanceVariableTargetNode,
           Prism::InstanceVariableWriteNode,
           Prism::ModuleNode,
-          Prism::SymbolNode,
+          Prism::NextNode,
+          Prism::NilNode,
+          Prism::RedoNode,
+          Prism::RescueNode,
+          Prism::RetryNode,
+          Prism::ReturnNode,
+          Prism::SelfNode,
           Prism::StringNode,
+          Prism::SuperNode,
+          Prism::SymbolNode,
+          Prism::TrueNode,
           Prism::UnlessNode,
+          Prism::UntilNode,
+          Prism::WhenNode,
+          Prism::WhileNode,
           Prism::YieldNode,
         ],
         T::Array[T.class_of(Prism::Node)],
@@ -58,21 +79,88 @@ module RubyLsp
 
         dispatcher.register(
           self,
+          :on_begin_node_enter,
+          :on_break_node_enter,
+          :on_call_node_enter,
+          :on_case_node_enter,
+          :on_class_node_enter,
+          :on_constant_path_node_enter,
           :on_constant_read_node_enter,
           :on_constant_write_node_enter,
-          :on_constant_path_node_enter,
-          :on_call_node_enter,
           :on_def_node_enter,
-          :on_instance_variable_read_node_enter,
-          :on_instance_variable_write_node_enter,
+          :on_else_node_enter,
+          :on_ensure_node_enter,
+          :on_false_node_enter,
+          :on_for_node_enter,
+          :on_if_node_enter,
           :on_instance_variable_and_write_node_enter,
           :on_instance_variable_operator_write_node_enter,
           :on_instance_variable_or_write_node_enter,
+          :on_instance_variable_read_node_enter,
           :on_instance_variable_target_node_enter,
+          :on_instance_variable_write_node_enter,
           :on_module_node_enter,
+          :on_next_node_enter,
+          :on_nil_node_enter,
+          :on_redo_node_enter,
+          :on_rescue_node_enter,
+          :on_retry_node_enter,
+          :on_return_node_enter,
+          :on_self_node_enter,
+          :on_super_node_enter,
+          :on_symbol_node_enter,
+          :on_true_node_enter,
           :on_unless_node_enter,
+          :on_until_node_enter,
+          :on_when_node_enter,
+          :on_while_node_enter,
           :on_yield_node_enter,
         )
+      end
+
+      sig { params(node: Prism::BeginNode).void }
+      def on_begin_node_enter(node)
+        @response_builder.push(static_documentation("begin.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::BreakNode).void }
+      def on_break_node_enter(node)
+        @response_builder.push(static_documentation("break.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::CallNode).void }
+      def on_call_node_enter(node)
+        if @path && File.basename(@path) == GEMFILE_NAME && node.name == :gem
+          generate_gem_hover(node)
+          return
+        end
+
+        return if @typechecker_enabled
+
+        message = node.message
+        return unless message
+
+        type = @type_inferrer.infer_receiver_type(@node_context)
+        return unless type
+
+        methods = @index.resolve_method(message, type)
+        return unless methods
+
+        title = "#{message}#{T.must(methods.first).decorated_parameters}"
+
+        categorized_markdown_from_index_entries(title, methods).each do |category, content|
+          @response_builder.push(content, category: category)
+        end
+      end
+
+      sig { params(node: Prism::CaseNode).void }
+      def on_case_node_enter(node)
+        @response_builder.push(static_documentation("case.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::ClassNode).void }
+      def on_class_node_enter(node)
+        @response_builder.push(static_documentation("class.md"), category: :documentation)
       end
 
       sig { params(node: Prism::ConstantReadNode).void }
@@ -102,44 +190,34 @@ module RubyLsp
         generate_hover(name, node.location)
       end
 
-      sig { params(node: Prism::CallNode).void }
-      def on_call_node_enter(node)
-        if @path && File.basename(@path) == GEMFILE_NAME && node.name == :gem
-          generate_gem_hover(node)
-          return
-        end
-
-        return if @typechecker_enabled
-
-        message = node.message
-        return unless message
-
-        type = @type_inferrer.infer_receiver_type(@node_context)
-        return unless type
-
-        methods = @index.resolve_method(message, type)
-        return unless methods
-
-        title = "#{message}#{T.must(methods.first).decorated_parameters}"
-
-        categorized_markdown_from_index_entries(title, methods).each do |category, content|
-          @response_builder.push(content, category: category)
-        end
-      end
-
       sig { params(node: Prism::DefNode).void }
       def on_def_node_enter(node)
         @response_builder.push(static_documentation("def.md"), category: :documentation)
       end
 
-      sig { params(node: Prism::InstanceVariableReadNode).void }
-      def on_instance_variable_read_node_enter(node)
-        handle_instance_variable_hover(node.name.to_s)
+      sig { params(node: Prism::ElseNode).void }
+      def on_else_node_enter(node)
+        @response_builder.push(static_documentation("else.md"), category: :documentation)
       end
 
-      sig { params(node: Prism::InstanceVariableWriteNode).void }
-      def on_instance_variable_write_node_enter(node)
-        handle_instance_variable_hover(node.name.to_s)
+      sig { params(node: Prism::EnsureNode).void }
+      def on_ensure_node_enter(node)
+        @response_builder.push(static_documentation("ensure.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::FalseNode).void }
+      def on_false_node_enter(node)
+        @response_builder.push(static_documentation("false.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::ForNode).void }
+      def on_for_node_enter(node)
+        @response_builder.push(static_documentation("for.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::IfNode).void }
+      def on_if_node_enter(node)
+        @response_builder.push(static_documentation("if.md"), category: :documentation)
       end
 
       sig { params(node: Prism::InstanceVariableAndWriteNode).void }
@@ -157,8 +235,18 @@ module RubyLsp
         handle_instance_variable_hover(node.name.to_s)
       end
 
+      sig { params(node: Prism::InstanceVariableReadNode).void }
+      def on_instance_variable_read_node_enter(node)
+        handle_instance_variable_hover(node.name.to_s)
+      end
+
       sig { params(node: Prism::InstanceVariableTargetNode).void }
       def on_instance_variable_target_node_enter(node)
+        handle_instance_variable_hover(node.name.to_s)
+      end
+
+      sig { params(node: Prism::InstanceVariableWriteNode).void }
+      def on_instance_variable_write_node_enter(node)
         handle_instance_variable_hover(node.name.to_s)
       end
 
@@ -167,9 +255,74 @@ module RubyLsp
         @response_builder.push(static_documentation("module.md"), category: :documentation)
       end
 
-      sig { params(node: Prism::InNode).void }
+      sig { params(node: Prism::NextNode).void }
+      def on_next_node_enter(node)
+        @response_builder.push(static_documentation("next.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::NilNode).void }
+      def on_nil_node_enter(node)
+        @response_builder.push(static_documentation("nil.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::RedoNode).void }
+      def on_redo_node_enter(node)
+        @response_builder.push(static_documentation("redo.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::RescueNode).void }
+      def on_rescue_node_enter(node)
+        @response_builder.push(static_documentation("rescue.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::RetryNode).void }
+      def on_retry_node_enter(node)
+        @response_builder.push(static_documentation("retry.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::ReturnNode).void }
+      def on_return_node_enter(node)
+        @response_builder.push(static_documentation("return.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::SelfNode).void }
+      def on_self_node_enter(node)
+        @response_builder.push(static_documentation("self.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::SuperNode).void }
+      def on_super_node_enter(node)
+        @response_builder.push(static_documentation("super.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::SymbolNode).void }
+      def on_symbol_node_enter(node)
+        @response_builder.push(static_documentation("symbol.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::TrueNode).void }
+      def on_true_node_enter(node)
+        @response_builder.push(static_documentation("true.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::UnlessNode).void }
       def on_unless_node_enter(node)
         @response_builder.push(static_documentation("unless.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::UntilNode).void }
+      def on_until_node_enter(node)
+        @response_builder.push(static_documentation("until.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::WhenNode).void }
+      def on_when_node_enter(node)
+        @response_builder.push(static_documentation("when.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::WhileNode).void }
+      def on_while_node_enter(node)
+        @response_builder.push(static_documentation("while.md"), category: :documentation)
       end
 
       sig { params(node: Prism::YieldNode).void }
