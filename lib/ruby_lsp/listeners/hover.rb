@@ -23,6 +23,7 @@ module RubyLsp
           Prism::ModuleNode,
           Prism::SymbolNode,
           Prism::StringNode,
+          Prism::UnlessNode,
           Prism::YieldNode,
         ],
         T::Array[T.class_of(Prism::Node)],
@@ -69,6 +70,7 @@ module RubyLsp
           :on_instance_variable_or_write_node_enter,
           :on_instance_variable_target_node_enter,
           :on_module_node_enter,
+          :on_unless_node_enter,
           :on_yield_node_enter,
         )
       end
@@ -163,6 +165,11 @@ module RubyLsp
       sig { params(node: Prism::ModuleNode).void }
       def on_module_node_enter(node)
         @response_builder.push(static_documentation("module.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::InNode).void }
+      def on_unless_node_enter(node)
+        @response_builder.push(static_documentation("unless.md"), category: :documentation)
       end
 
       sig { params(node: Prism::YieldNode).void }
