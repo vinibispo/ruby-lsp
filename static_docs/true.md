@@ -1,3 +1,3 @@
 ### `true`
 
-Boolean true. See [literals](https://docs.ruby-lang.org/en/3.3/syntax/literals_rdoc.html)
+Boolean true. [Read more](static_docs/descriptions/true.md)

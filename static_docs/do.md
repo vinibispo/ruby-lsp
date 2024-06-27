@@ -1,3 +1,3 @@
 ### `do`
 
-Starts a block.
+Starts a block. [Read more](static_docs/descriptions/do.md)

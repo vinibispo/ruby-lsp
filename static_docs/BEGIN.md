@@ -1,3 +1,3 @@
 ### `begin`
 
-Starts an exception handling block. See [exceptions syntax](https://docs.ruby-lang.org/en/3.3/syntax/exceptions_rdoc.html)
+Starts an exception handling block. [Read more](static_docs/descriptions/BEGIN.md)

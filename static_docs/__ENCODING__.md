@@ -1,3 +1,3 @@
 ### `__ENCODING__`
 
-The script encoding of the current file. See [`Encoding`](https://docs.ruby-lang.org/en/3.3/Encoding.html).
+The script encoding of the current file. [Read more](static_docs/descriptions/__ENCODING__.md)

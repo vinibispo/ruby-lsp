@@ -1,3 +1,3 @@
 ### `super`
 
-Calls the current method in a superclass. See [methods](https://docs.ruby-lang.org/en/3.3/syntax/methods_rdoc.html)
+Calls the current method in a superclass. [Read more](static_docs/descriptions/super.md)

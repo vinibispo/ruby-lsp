@@ -1,3 +1,3 @@
 ### `retry`
 
-Retries an exception block. See [exception handling](https://docs.ruby-lang.org/en/3.3/syntax/exceptions_rdoc.html)
+Retries an exception block. [Read more](static_docs/descriptions/retry.md)

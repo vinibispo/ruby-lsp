@@ -1,3 +1,3 @@
 ### `break`
 
-Leaves a block early. See [control expressions syntax](https://docs.ruby-lang.org/en/3.3/syntax/control_expressions_rdoc.html)
+Leaves a block early. [Read more](static_docs/descriptions/break.md)

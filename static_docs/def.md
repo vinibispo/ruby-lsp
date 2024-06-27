@@ -1,3 +1,3 @@
 ### `def`
 
-Defines a method. See [methods syntax](https://docs.ruby-lang.org/en/3.3/syntax/methods_rdoc.html)
+Defines a method. [Read more](static_docs/descriptions/def.md)
