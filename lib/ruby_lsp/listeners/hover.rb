@@ -11,6 +11,7 @@ module RubyLsp
         [
           Prism::AliasGlobalVariableNode,
           Prism::AliasMethodNode,
+          Prism::AndNode,
           Prism::BeginNode,
           Prism::BreakNode,
           Prism::CallNode,
@@ -83,6 +84,7 @@ module RubyLsp
           self,
           :on_alias_global_variable_node_enter,
           :on_alias_method_node_enter,
+          :on_and_node_enter,
           :on_begin_node_enter,
           :on_break_node_enter,
           :on_call_node_enter,
@@ -120,6 +122,11 @@ module RubyLsp
           :on_while_node_enter,
           :on_yield_node_enter,
         )
+      end
+
+      sig { params(node: Prism::AndNode).void }
+      def on_and_node_enter(node)
+        @response_builder.push(static_documentation("and.md"), category: :documentation)
       end
 
       sig { params(node: Prism::AliasGlobalVariableNode).void }
