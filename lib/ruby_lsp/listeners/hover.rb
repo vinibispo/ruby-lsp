@@ -21,6 +21,7 @@ module RubyLsp
           Prism::ConstantReadNode,
           Prism::ConstantWriteNode,
           Prism::DefNode,
+          Prism::DefinedNode,
           Prism::ElseNode,
           Prism::EnsureNode,
           Prism::FalseNode,
@@ -95,6 +96,7 @@ module RubyLsp
           :on_constant_read_node_enter,
           :on_constant_write_node_enter,
           :on_def_node_enter,
+          :on_defined_node_enter,
           :on_else_node_enter,
           :on_ensure_node_enter,
           :on_false_node_enter,
@@ -216,6 +218,11 @@ module RubyLsp
       sig { params(node: Prism::DefNode).void }
       def on_def_node_enter(node)
         @response_builder.push(static_documentation("def.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::DefinedNode).void }
+      def on_defined_node_enter(node)
+        @response_builder.push(static_documentation("defined?.md"), category: :documentation)
       end
 
       sig { params(node: Prism::ElseNode).void }
