@@ -27,6 +27,7 @@ module RubyLsp
           Prism::FalseNode,
           Prism::ForNode,
           Prism::IfNode,
+          Prism::InNode,
           Prism::InstanceVariableAndWriteNode,
           Prism::InstanceVariableOperatorWriteNode,
           Prism::InstanceVariableOrWriteNode,
@@ -103,6 +104,7 @@ module RubyLsp
           :on_false_node_enter,
           :on_for_node_enter,
           :on_if_node_enter,
+          :on_in_node_enter,
           :on_instance_variable_and_write_node_enter,
           :on_instance_variable_operator_write_node_enter,
           :on_instance_variable_or_write_node_enter,
@@ -250,6 +252,11 @@ module RubyLsp
       sig { params(node: Prism::IfNode).void }
       def on_if_node_enter(node)
         @response_builder.push(static_documentation("if.md"), category: :documentation)
+      end
+
+      sig { params(node: Prism::InNode).void }
+      def on_in_node_enter(node)
+        @response_builder.push(static_documentation("in.md"), category: :documentation)
       end
 
       sig { params(node: Prism::InstanceVariableAndWriteNode).void }
