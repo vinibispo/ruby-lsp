@@ -306,6 +306,8 @@ module RubyIndexer
 
       sig { returns(T::Array[RubyIndexer::Entry::Parameter]) }
       def parameters
+        # TODO: This should be ententually removed.
+        # For now, it will help with the transition to supporting multiple signatures per method.
         T.must(signatures.first).parameters
       end
 

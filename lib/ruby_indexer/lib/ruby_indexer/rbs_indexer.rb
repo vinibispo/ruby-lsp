@@ -22,7 +22,13 @@ module RubyIndexer
 
     private
 
-    sig { params(source: T.untyped, pathname: Pathname, declarations: T::Array[RBS::AST::Declarations::Base]).void }
+    sig do
+      params(
+        source: T.any(Symbol, String), # If source is from Ruby Core, it will be the string `:core`
+        pathname: Pathname,
+        declarations: T::Array[RBS::AST::Declarations::Base],
+      ).void
+    end
     def process_signature(source, pathname, declarations)
       declarations.each do |declaration|
         process_declaration(declaration, pathname)
@@ -123,7 +129,104 @@ module RubyIndexer
       end
 
       real_owner = member.singleton? ? existing_or_new_singleton_klass(owner) : owner
-      @index.add(Entry::Method.new(name, file_path, location, location, comments, [], visibility, real_owner))
+      @index.add(Entry::Method.new(
+        name,
+        file_path,
+        location,
+        location,
+        comments,
+        signatures(member),
+        visibility,
+        real_owner,
+      ))
+    end
+
+    sig { params(member: RBS::AST::Members::MethodDefinition).returns(T::Array[Entry::Signature]) }
+    def signatures(member)
+      member.overloads.map do |overload|
+        parameters = process_overload(overload)
+        Entry::Signature.new(parameters)
+      end
+    end
+
+    sig { params(overload: RBS::AST::Members::MethodDefinition::Overload).returns(T::Array[Entry::Parameter]) }
+    def process_overload(overload)
+      function = T.cast(overload.method_type.type, RBS::Types::Function)
+      parameters = []
+      parameters += process_required_positionals(function) if function.required_positionals
+      parameters += process_optional_positionals(function) if function.optional_positionals
+      parameters += process_required_keywords(function) if function.required_keywords
+      parameters += process_optional_keywords(function) if function.optional_keywords
+      parameters += process_trailing_positionals(function) if function.trailing_positionals
+      parameters += process_rest_positionals(function) if function.rest_positionals
+
+      block = overload.method_type.block
+      parameters += process_block(block) if block&.required
+
+      parameters
+    end
+
+    sig { params(function: RBS::Types::Function).returns(T::Array[Entry::RequiredParameter]) }
+    def process_required_positionals(function)
+      function.required_positionals.map do |param|
+        name = param.name || :anon # TODO: consider how to handle
+
+        Entry::RequiredParameter.new(name: name)
+      end
+    end
+
+    sig { params(function: RBS::Types::Function).returns(T::Array[Entry::RestParameter]) }
+    def process_rest_positionals(function)
+      rest = function.rest_positionals
+
+      rest_name = rest.name || Entry::RestParameter::DEFAULT_NAME
+
+      [Entry::RestParameter.new(name: rest_name)]
+    end
+
+    sig { params(function: RBS::Types::Function).returns(T::Array[Entry::OptionalParameter]) }
+    def process_optional_positionals(function)
+      function.optional_positionals.map do |param|
+        name = param.name || :anon # TODO: consider how to handle
+
+        Entry::OptionalParameter.new(name: name)
+      end
+    end
+
+    sig { params(function: RBS::Types::Function).returns(T::Array[Entry::OptionalParameter]) }
+    def process_trailing_positionals(function)
+      function.trailing_positionals.map do |param|
+        Entry::OptionalParameter.new(name: param.name)
+      end
+    end
+
+    sig { params(function: RBS::Types::Function).returns(T::Array[Entry::KeywordParameter]) }
+    def process_required_keywords(function)
+      function.required_keywords.map do |param|
+        name = param.first
+        Entry::KeywordParameter.new(name: name)
+      end
+    end
+
+    sig { params(function: RBS::Types::Function).returns(T::Array[Entry::OptionalKeywordParameter]) }
+    def process_optional_keywords(function)
+      function.optional_keywords.map do |param|
+        # hack?
+        name = param.first.to_s.to_sym
+        Entry::OptionalKeywordParameter.new(name: name)
+      end
+    end
+
+    sig { params(block: RBS::Types::Block).returns(T::Array[Entry::BlockParameter]) }
+    def process_block(block)
+      function = block.type
+      # TODO: other kinds of arguments
+      function.required_positionals.map do |required_positional|
+        name = required_positional.name
+        name = :blk unless name
+
+        Entry::BlockParameter.new(name: name)
+      end
     end
 
     sig { params(owner: Entry::Namespace).returns(T.nilable(Entry::Class)) }

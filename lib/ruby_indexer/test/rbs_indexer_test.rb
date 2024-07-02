@@ -74,5 +74,203 @@ module RubyIndexer
 
       assert_same(entry.location, entry.name_location)
     end
+
+    def test_rbs_method_with_required_positionals
+      entries = @index["crypt"] # https://www.rubydoc.info/stdlib/core/String#crypt-instance_method
+      assert_equal(1, entries.length)
+
+      entry = entries.first
+      signatures = entry.signatures
+      assert_equal(1, signatures.length)
+
+      first_signature = signatures.first
+
+      # (::string salt_str) -> ::String
+
+      assert_equal(1, first_signature.parameters.length)
+      assert_kind_of(Entry::RequiredParameter, first_signature.parameters[0])
+      assert_equal(:salt_str, first_signature.parameters[0].name)
+    end
+
+    def test_rbs_method_with_optional_parameter
+      entries = @index["chomp"] # https://www.rubydoc.info/stdlib/core/String#chomp-instance_method
+      assert_equal(1, entries.length)
+
+      entry = entries.first
+      signatures = entry.signatures
+      assert_equal(1, signatures.length)
+
+      first_signature = signatures.first
+
+      # (?::string? separator) -> ::String
+
+      assert_equal(1, first_signature.parameters.length)
+      assert_kind_of(Entry::OptionalParameter, first_signature.parameters[0])
+      assert_equal(:separator, first_signature.parameters[0].name)
+    end
+
+    def test_rbs_method_with_required_and_optional_parameters
+      entries = @index["gsub"] # https://www.rubydoc.info/stdlib/core/String#gsub-instance_method
+      assert_equal(1, entries.length)
+
+      entry = entries.first
+
+      signatures = entry.signatures
+      assert_equal(3, signatures.length)
+
+      # (::Regexp | ::string pattern, ::string | ::hash[::String, ::_ToS] replacement) -> ::String
+      # | (::Regexp | ::string pattern) -> ::Enumerator[::String, ::String]
+      # | (::Regexp | ::string pattern) { (::String match) -> ::_ToS } -> ::String
+
+      parameters = signatures[0].parameters
+      assert_equal([:pattern, :replacement], parameters.map(&:name))
+      assert_kind_of(Entry::RequiredParameter, parameters[0])
+      assert_kind_of(Entry::RequiredParameter, parameters[1])
+
+      parameters = signatures[1].parameters
+      assert_equal([:pattern], parameters.map(&:name))
+      assert_kind_of(Entry::RequiredParameter, parameters[0])
+
+      parameters = signatures[2].parameters
+      assert_equal([:pattern, :match], parameters.map(&:name))
+      assert_kind_of(Entry::RequiredParameter, parameters[0])
+      assert_kind_of(Entry::BlockParameter, parameters[1])
+    end
+
+    def test_rbs_anonymous_block_parameter
+      entries = @index["open"]
+      entry = entries.find { |entry| entry.owner.name == "File::<Class:File>" }
+
+      assert_equal(2, entry.signatures.length)
+
+      # (::String name, ?::String mode, ?::Integer perm) -> ::IO?
+      # | [T] (::String name, ?::String mode, ?::Integer perm) { (::IO) -> T } -> T
+
+      parameters = entry.signatures[0].parameters
+      assert_equal([:file_name, :mode, :perm], parameters.map(&:name))
+      assert_kind_of(Entry::RequiredParameter, parameters[0])
+      assert_kind_of(Entry::OptionalParameter, parameters[1])
+      assert_kind_of(Entry::OptionalParameter, parameters[2])
+
+      parameters = entry.signatures[1].parameters
+      assert_equal([:file_name, :mode, :perm, :blk], parameters.map(&:name))
+      assert_kind_of(Entry::RequiredParameter, parameters[0])
+      assert_kind_of(Entry::OptionalParameter, parameters[1])
+      assert_kind_of(Entry::OptionalParameter, parameters[2])
+      assert_kind_of(Entry::BlockParameter, parameters[3])
+    end
+
+    def test_rbs_method_with_rest_positionals
+      entries = @index["count"] # https://www.rubydoc.info/stdlib/core/String#count-instance_method
+      entry = entries.find { |entry| entry.owner.name == "String" }
+
+      parameters = entry.parameters
+      assert_equal(1, entry.signatures.length)
+
+      # (::String::selector selector_0, *::String::selector more_selectors) -> ::Integer
+
+      assert_equal([:selector_0, :more_selectors], parameters.map(&:name))
+      assert_kind_of(RubyIndexer::Entry::RequiredParameter, parameters[0])
+      assert_kind_of(RubyIndexer::Entry::RestParameter, parameters[1])
+    end
+
+    def test_rbs_method_with_trailing_positionals
+      entries = @index["select"] # https://ruby-doc.org/3.3.3/IO.html#method-c-select
+      entry = entries.find { |entry| entry.owner.name == "IO::<Class:IO>" }
+
+      signatures = entry.signatures
+      assert_equal(2, signatures.length)
+
+      # () { (::String) -> ::boolish } -> ::Array[::String]
+      # | () -> ::Enumerator[::String, ::Array[::String]]
+
+      parameters = signatures[0].parameters
+      assert_equal([:read_array, :write_array, :error_array], parameters.map(&:name))
+      assert_kind_of(Entry::RequiredParameter, parameters[0])
+      assert_kind_of(Entry::OptionalParameter, parameters[1])
+      assert_kind_of(Entry::OptionalParameter, parameters[2])
+
+      parameters = signatures[1].parameters
+      assert_equal([:read_array, :write_array, :error_array, :timeout], parameters.map(&:name))
+      assert_kind_of(Entry::RequiredParameter, parameters[0])
+      assert_kind_of(Entry::OptionalParameter, parameters[1])
+      assert_kind_of(Entry::OptionalParameter, parameters[2])
+      assert_kind_of(Entry::OptionalParameter, parameters[3])
+    end
+
+    def test_rbs_method_with_optional_keywords
+      entries = @index["step"] # https://www.rubydoc.info/stdlib/core/Numeric#step-instance_method
+      entry = entries.find { |entry| entry.owner.name == "Numeric" }
+
+      signatures = entry.signatures
+      assert_equal(4, signatures.length)
+
+      # (?::Numeric limit, ?::Numeric step) { (::Numeric) -> void } -> self
+      # | (?::Numeric limit, ?::Numeric step) -> ::Enumerator[::Numeric, self]
+      # | (?by: ::Numeric, ?to: ::Numeric) { (::Numeric) -> void } -> self
+      # | (?by: ::Numeric, ?to: ::Numeric) -> ::Enumerator[::Numeric, self]
+
+      parameters = signatures[0].parameters
+      assert_equal([:limit, :step, :blk], parameters.map(&:name))
+      assert_kind_of(Entry::OptionalParameter, parameters[0])
+      assert_kind_of(Entry::OptionalParameter, parameters[1])
+      assert_kind_of(Entry::BlockParameter, parameters[2])
+
+      parameters = signatures[1].parameters
+      assert_equal([:limit, :step], parameters.map(&:name))
+      assert_kind_of(Entry::OptionalParameter, parameters[0])
+      assert_kind_of(Entry::OptionalParameter, parameters[1])
+
+      parameters = signatures[2].parameters
+      assert_equal([:by, :to, :blk], parameters.map(&:name))
+      assert_kind_of(Entry::OptionalKeywordParameter, parameters[0])
+      assert_kind_of(Entry::OptionalKeywordParameter, parameters[1])
+      assert_kind_of(Entry::BlockParameter, parameters[2])
+
+      parameters = signatures[3].parameters
+      assert_equal([:by, :to], parameters.map(&:name))
+      assert_kind_of(Entry::OptionalKeywordParameter, parameters[0])
+      assert_kind_of(Entry::OptionalKeywordParameter, parameters[1])
+    end
+
+    def test_rbs_method_with_required_keywords
+      # Investigating if there are any methods in Core for this
+    end
+
+    def test_parse_some_rbs
+      rbs = <<~RBS
+        class File
+          def self?.open: (String name, ?String mode, ?Integer perm) -> IO?
+              | [T] (String name, ?String mode, ?Integer perm) { (IO) -> T } -> T
+        end
+      RBS
+      signatures = parse_rbs_methods(rbs)
+      assert_equal 2, signatures.length
+      parameters = signatures[0].parameters
+      assert_equal([:name, :mode, :perm], parameters.map(&:name))
+      assert_kind_of(Entry::RequiredParameter, parameters[0])
+      assert_kind_of(Entry::OptionalParameter, parameters[1])
+      assert_kind_of(Entry::OptionalParameter, parameters[2])
+
+      parameters = signatures[1].parameters
+      assert_equal([:name, :mode, :perm, :blk], parameters.map(&:name))
+      assert_kind_of(Entry::RequiredParameter, parameters[0])
+      assert_kind_of(Entry::OptionalParameter, parameters[1])
+      assert_kind_of(Entry::OptionalParameter, parameters[2])
+      assert_kind_of(Entry::BlockParameter, parameters[3])
+    end
+
+    private
+
+    def parse_rbs_methods(rbs)
+      buffer = RBS::Buffer.new(content: rbs, name: )
+      _, _, declarations = RBS::Parser.parse_signature(buffer)
+      index = RubyIndexer::Index.new
+      indexer = RubyIndexer::RBSIndexer.new(index)
+      pathname = Pathname.new("file.rbs")
+      indexer.send(:process_signature, rbs, pathname, declarations)
+      entries = index.instance_variable_get(:@entries)
+      entries["open"].first.signatures
+    end
   end
 end
