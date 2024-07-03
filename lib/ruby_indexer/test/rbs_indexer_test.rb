@@ -244,7 +244,7 @@ module RubyIndexer
               | [T] (String name, ?String mode, ?Integer perm) { (IO) -> T } -> T
         end
       RBS
-      signatures = parse_rbs_methods(rbs)
+      signatures = parse_rbs_methods(rbs, "open")
       assert_equal 2, signatures.length
       parameters = signatures[0].parameters
       assert_equal([:name, :mode, :perm], parameters.map(&:name))
@@ -262,7 +262,7 @@ module RubyIndexer
 
     private
 
-    def parse_rbs_methods(rbs)
+    def parse_rbs_methods(rbs, method_name)
       buffer = RBS::Buffer.new(content: rbs, name: )
       _, _, declarations = RBS::Parser.parse_signature(buffer)
       index = RubyIndexer::Index.new
@@ -270,7 +270,7 @@ module RubyIndexer
       pathname = Pathname.new("file.rbs")
       indexer.send(:process_signature, rbs, pathname, declarations)
       entries = index.instance_variable_get(:@entries)
-      entries["open"].first.signatures
+      entries[method_name].first.signatures
     end
   end
 end
