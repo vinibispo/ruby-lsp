@@ -42,11 +42,13 @@ module RubyLsp
         target_method = methods.first
         return unless target_method
 
-        parameters = target_method.parameters
+        signatures = target_method.signatures
         name = target_method.name
 
-        # If the method doesn't have any parameters, there's no need to show signature help
-        return if parameters.empty?
+        # If the method doesn't have any signatures, there's no need to show signature help
+        return if signatures.empty?
+
+        parameters = T.must(signatures.first).parameters
 
         label = "#{name}(#{parameters.map(&:decorated_name).join(", ")})"
 

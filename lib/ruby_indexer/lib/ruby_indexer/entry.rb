@@ -304,12 +304,12 @@ module RubyIndexer
       sig { returns(T.nilable(Entry::Namespace)) }
       attr_reader :owner
 
-      sig { returns(T::Array[RubyIndexer::Entry::Parameter]) }
-      def parameters
-        # TODO: This should be ententually removed.
-        # For now, it will help with the transition to supporting multiple signatures per method.
-        T.must(signatures.first).parameters
-      end
+      # sig { returns(T::Array[RubyIndexer::Entry::Parameter]) }
+      # def parameters
+      #   # TODO: This should be ententually removed.
+      #   # For now, it will help with the transition to supporting multiple signatures per method.
+      #   T.must(signatures.first).parameters
+      # end
 
       sig do
         params(
@@ -330,12 +330,14 @@ module RubyIndexer
       sig { abstract.returns(T::Array[Entry::Signature]) }
       def signatures; end
 
+      # def decorated_parameters
       sig { returns(String) }
-      def decorated_parameters
-        first_signature = signatures.first
-        return "()" unless first_signature
+      def present_method
+        return "#{@name}()" if signatures.empty?
 
-        "(#{first_signature.format})"
+        signatures.map do |signature|
+          "#{@name}(#{signature.format})"
+        end.join("\n\n")
       end
     end
 
@@ -528,14 +530,14 @@ module RubyIndexer
         @owner = T.let(unresolved_alias.owner, T.nilable(Entry::Namespace))
       end
 
-      sig { returns(T::Array[Parameter]) }
-      def parameters
-        @target.parameters
+      sig { returns(T::Array[Signature]) }
+      def signatures
+        @target.signatures
       end
 
       sig { returns(String) }
-      def decorated_parameters
-        @target.decorated_parameters
+      def present_method
+        @target.present_method
       end
     end
 

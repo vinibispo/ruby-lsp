@@ -321,14 +321,6 @@ module RubyLsp
           filter_text: name,
           text_edit: Interface::TextEdit.new(range: range_from_location(T.must(node.message_loc)), new_text: name),
           kind: Constant::CompletionItemKind::METHOD,
-          label_details: Interface::CompletionItemLabelDetails.new(
-            detail: entry.decorated_parameters,
-            description: entry.file_name,
-          ),
-          documentation: Interface::MarkupContent.new(
-            kind: "markdown",
-            value: markdown_from_index_entries(name, entry),
-          ),
         )
       end
 
