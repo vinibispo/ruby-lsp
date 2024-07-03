@@ -60,9 +60,7 @@ module RubyLsp
         first_entry = T.must(entries.first)
 
         if first_entry.is_a?(RubyIndexer::Entry::Member)
-          detail = first_entry.signatures.first&.format || "()"
           label = first_entry.present_method
-          # label = "#{label}#{first_entry.decorated_parameters}"
         end
 
         @item[:documentation] = Interface::MarkupContent.new(
