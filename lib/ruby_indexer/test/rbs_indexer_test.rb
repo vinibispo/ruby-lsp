@@ -164,7 +164,7 @@ module RubyIndexer
       entries = @index["count"] # https://www.rubydoc.info/stdlib/core/String#count-instance_method
       entry = entries.find { |entry| entry.owner.name == "String" }
 
-      parameters = entry.parameters
+      parameters = entry.signatures.first.parameters
       assert_equal(1, entry.signatures.length)
 
       # (::String::selector selector_0, *::String::selector more_selectors) -> ::Integer

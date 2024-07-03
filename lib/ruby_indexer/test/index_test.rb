@@ -1542,7 +1542,7 @@ module RubyIndexer
       assert_equal("Baz", T.must(entries.first.owner).name)
     end
 
-    def test_decorated_parameters
+    def test_present_method
       index(<<~RUBY)
         class Foo
           def bar(a, b = 1, c: 2)
@@ -1555,10 +1555,11 @@ module RubyIndexer
 
       entry = T.must(methods.first)
 
-      assert_equal("(a, b = <default>, c: <default>)", entry.decorated_parameters)
+      assert_equal("bar(a, b = <default>, c: <default>)", entry.present_method)
     end
 
-    def test_decorated_parameters_when_method_has_no_parameters
+    # TODO: test name
+    def test_present_method_when_method_has_no_parameters
       index(<<~RUBY)
         class Foo
           def bar
@@ -1571,7 +1572,7 @@ module RubyIndexer
 
       entry = T.must(methods.first)
 
-      assert_equal("()", entry.decorated_parameters)
+      assert_equal("bar()", entry.present_method)
     end
   end
 end
