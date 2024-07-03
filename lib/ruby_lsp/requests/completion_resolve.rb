@@ -40,7 +40,8 @@ module RubyLsp
       def perform
         # Based on the spec https://microsoft.github.io/language-server-protocol/specification#textDocument_completion,
         # a completion resolve request must always return the original completion item without modifying ANY fields
-        # other than label details and documentation. If we modify anything, the completion behaviour might be broken.
+        # other than detail and documentation (NOT labelDetails). If we modify anything, the completion behaviour might
+        # be broken.
         #
         # For example, forgetting to return the `insertText` included in the original item will make the editor use the
         # `label` for the text edit instead
@@ -60,14 +61,9 @@ module RubyLsp
 
         if first_entry.is_a?(RubyIndexer::Entry::Member)
           detail = first_entry.signatures.first&.format || "()"
-          # label = "#{label}#{first_entry.decorated_parameters}"
           label = first_entry.present_method
+          # label = "#{label}#{first_entry.decorated_parameters}"
         end
-
-        @item[:labelDetails] = Interface::CompletionItemLabelDetails.new(
-          description: "xyz", # entries.take(MAX_DOCUMENTATION_ENTRIES).map(&:file_name).join(","),
-          # detail: detail,
-        )
 
         @item[:documentation] = Interface::MarkupContent.new(
           kind: "markdown",
