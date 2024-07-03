@@ -304,13 +304,6 @@ module RubyIndexer
       sig { returns(T.nilable(Entry::Namespace)) }
       attr_reader :owner
 
-      # sig { returns(T::Array[RubyIndexer::Entry::Parameter]) }
-      # def parameters
-      #   # TODO: This should be ententually removed.
-      #   # For now, it will help with the transition to supporting multiple signatures per method.
-      #   T.must(signatures.first).parameters
-      # end
-
       sig do
         params(
           name: String,
@@ -330,7 +323,6 @@ module RubyIndexer
       sig { abstract.returns(T::Array[Entry::Signature]) }
       def signatures; end
 
-      # def decorated_parameters
       sig { returns(String) }
       def present_method
         return "#{@name}()" if signatures.empty?

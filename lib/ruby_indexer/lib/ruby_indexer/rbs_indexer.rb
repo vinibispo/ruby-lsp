@@ -129,16 +129,8 @@ module RubyIndexer
       end
 
       real_owner = member.singleton? ? existing_or_new_singleton_klass(owner) : owner
-      @index.add(Entry::Method.new(
-        name,
-        file_path,
-        location,
-        location,
-        comments,
-        signatures(member),
-        visibility,
-        real_owner,
-      ))
+      signatures = signatures(member)
+      @index.add(Entry::Method.new(name, file_path, location, location, comments, signatures, visibility, real_owner))
     end
 
     sig { params(member: RBS::AST::Members::MethodDefinition).returns(T::Array[Entry::Signature]) }
