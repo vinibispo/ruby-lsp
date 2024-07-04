@@ -300,7 +300,7 @@ module RubyLsp
 
           label_details = Interface::CompletionItemLabelDetails.new(
             description: entry.file_name,
-            detail: "(#{entry.signatures.first.format})",
+            detail: "(#{T.must(entry.signatures.first).format})",
           )
           @response_builder << Interface::CompletionItem.new(
             label: entry_name,
