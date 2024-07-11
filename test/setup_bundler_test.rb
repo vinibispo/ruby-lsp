@@ -226,13 +226,15 @@ class SetupBundlerTest < Minitest::Test
   end
 
   def test_uses_absolute_bundle_path_for_bundle_install
-    Bundler.settings.temporary(path: "vendor/bundle") do
-      Object.any_instance.expects(:system).with(
-        bundle_env(".ruby-lsp/Gemfile"),
-        "(bundle check || bundle install) 1>&2",
-      ).returns(true)
-      Bundler::LockfileParser.any_instance.expects(:dependencies).returns({}).at_least_once
-      run_script(expected_path: File.expand_path("vendor/bundle", Dir.pwd))
+    with_isolated_bundler do
+      Bundler.settings.temporary(path: "vendor/bundle") do
+        Object.any_instance.expects(:system).with(
+          bundle_env(".ruby-lsp/Gemfile"),
+          "(bundle check || bundle install) 1>&2",
+        ).returns(true)
+        Bundler::LockfileParser.any_instance.expects(:dependencies).returns({}).at_least_once
+        run_script(expected_path: File.expand_path("vendor/bundle", Dir.pwd))
+      end
     end
   ensure
     FileUtils.rm_r(".ruby-lsp")
@@ -594,6 +596,21 @@ class SetupBundlerTest < Minitest::Test
   end
 
   private
+
+  def with_isolated_bundler
+    Bundler.with_unbundled_env do
+      old_values = Bundler.instance_variables.to_h do |name|
+        [name, Bundler.instance_variable_get(name)]
+      end
+      Bundler.instance_variables.each { |name| Bundler.remove_instance_variable(name) }
+      yield
+    ensure
+      Bundler.instance_variables.each { |name| Bundler.remove_instance_variable(name) }
+      T.must(old_values).each do |name, value|
+        Bundler.instance_variable_set(name, value)
+      end
+    end
+  end
 
   # This method runs the script and then immediately unloads it. This allows us to make assertions against the effects
   # of running the script multiple times
