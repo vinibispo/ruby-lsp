@@ -139,6 +139,7 @@ PLATFORMS
   arm64-darwin
   universal-java-1.8
   universal-java-11
+  universal-java-21
   x64-mingw-ucrt
   x64-mingw32
   x86_64-darwin
