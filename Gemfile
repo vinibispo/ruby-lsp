@@ -8,7 +8,6 @@ gem "bundler", "~> 2.5"
 gem "minitest", "~> 5.23"
 
 group :development do
-  gem "debug", "~> 1.9", require: false
   gem "minitest-reporters", "~> 1.6"
   gem "mocha", "~> 2.3"
   gem "psych", "~> 5.1", require: false
@@ -24,6 +23,7 @@ group :development do
   gem "syntax_tree", ">= 6.1.1", "< 7"
 
   platforms :ruby do # C Ruby (MRI), Rubinius or TruffleRuby, but NOT Windows
+    gem "debug", "~> 1.9", require: false
     # sorbet-static is not available on Windows. We also skip Tapioca since it depends on sorbet-static-and-runtime
     gem "sorbet-static-and-runtime"
     gem "tapioca", "~> 0.13", require: false
