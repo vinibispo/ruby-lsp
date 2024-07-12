@@ -3,6 +3,7 @@
 
 begin
   gem("rbs", ">= 3", "< 4")
+  require "rbs"
 rescue LoadError
   return
 end
