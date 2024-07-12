@@ -29,3 +29,5 @@ group :development do
     gem "tapioca", "~> 0.13", require: false
   end
 end
+
+gem "rbs"

@@ -1,6 +1,13 @@
 # typed: true
 # frozen_string_literal: true
 
+begin
+  gem("rbs", ">= 3", "< 4")
+  require "rbs"
+rescue LoadError
+  return
+end
+
 require_relative "test_case"
 
 module RubyIndexer
