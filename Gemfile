@@ -27,7 +27,6 @@ group :development do
     # sorbet-static is not available on Windows. We also skip Tapioca since it depends on sorbet-static-and-runtime
     gem "sorbet-static-and-runtime"
     gem "tapioca", "~> 0.13", require: false
+    gem "rbs"
   end
 end
-
-gem "rbs"
