@@ -308,7 +308,7 @@ module RubyIndexer
 
       abstract!
 
-      sig { returns(T.nilable(Entry::Namespace)) }
+      sig { returns(Namespace) }
       attr_reader :owner
 
       sig { returns(T::Array[RubyIndexer::Entry::Parameter]) }
@@ -323,7 +323,7 @@ module RubyIndexer
           location: T.any(Prism::Location, RubyIndexer::Location),
           comments: T::Array[String],
           visibility: Visibility,
-          owner: T.nilable(Entry::Namespace),
+          owner: Namespace,
         ).void
       end
       def initialize(name, file_path, location, comments, visibility, owner) # rubocop:disable Metrics/ParameterLists
@@ -379,7 +379,7 @@ module RubyIndexer
           comments: T::Array[String],
           signatures: T::Array[Signature],
           visibility: Visibility,
-          owner: T.nilable(Entry::Namespace),
+          owner: Namespace,
         ).void
       end
       def initialize(name, file_path, location, name_location, comments, signatures, visibility, owner) # rubocop:disable Metrics/ParameterLists
@@ -456,7 +456,7 @@ module RubyIndexer
 
     # Represents an instance variable e.g.: @a = 1
     class InstanceVariable < Entry
-      sig { returns(T.nilable(Entry::Namespace)) }
+      sig { returns(Namespace) }
       attr_reader :owner
 
       sig do
@@ -465,7 +465,7 @@ module RubyIndexer
           file_path: String,
           location: T.any(Prism::Location, RubyIndexer::Location),
           comments: T::Array[String],
-          owner: T.nilable(Entry::Namespace),
+          owner: Namespace,
         ).void
       end
       def initialize(name, file_path, location, comments, owner)
@@ -483,14 +483,14 @@ module RubyIndexer
       sig { returns(String) }
       attr_reader :new_name, :old_name
 
-      sig { returns(T.nilable(Entry::Namespace)) }
+      sig { returns(Namespace) }
       attr_reader :owner
 
       sig do
         params(
           new_name: String,
           old_name: String,
-          owner: T.nilable(Entry::Namespace),
+          owner: Namespace,
           file_path: String,
           location: Prism::Location,
           comments: T::Array[String],
@@ -512,7 +512,7 @@ module RubyIndexer
       sig { returns(T.any(Member, MethodAlias)) }
       attr_reader :target
 
-      sig { returns(T.nilable(Entry::Namespace)) }
+      sig { returns(Namespace) }
       attr_reader :owner
 
       sig { params(target: T.any(Member, MethodAlias), unresolved_alias: UnresolvedMethodAlias).void }
@@ -530,7 +530,7 @@ module RubyIndexer
         )
 
         @target = target
-        @owner = T.let(unresolved_alias.owner, T.nilable(Entry::Namespace))
+        @owner = T.let(unresolved_alias.owner, Namespace)
       end
 
       sig { returns(T::Array[Parameter]) }

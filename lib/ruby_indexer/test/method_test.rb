@@ -406,15 +406,15 @@ module RubyIndexer
 
           # These two are not indexed because they are dynamic or incomplete
           alias_method baz, :to_a
-          alias_method :baz
+          alias_method :qux
         end
       RUBY
 
       assert_entry("whatever", Entry::UnresolvedMethodAlias, "/fake/path/foo.rb:1-8:1-16")
       assert_entry("foo", Entry::UnresolvedMethodAlias, "/fake/path/foo.rb:2-15:2-19")
       assert_entry("bar", Entry::UnresolvedMethodAlias, "/fake/path/foo.rb:3-15:3-20")
-      # Foo plus 3 valid aliases
-      assert_equal(4, @index.length - @default_indexed_entries.length)
+      refute_entry("baz")
+      refute_entry("qux")
     end
 
     def test_singleton_methods

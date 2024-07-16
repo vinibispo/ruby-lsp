@@ -35,6 +35,9 @@ module RubyIndexer
 
       # Holds the linearized ancestors list for every namespace
       @ancestors = T.let({}, T::Hash[String, T::Array[String]])
+
+      # Flag to indicate whether we already indexed core declarations or not
+      @indexed_core_declarations = T.let(false, T::Boolean)
     end
 
     sig { params(indexable: IndexablePath).void }
@@ -157,7 +160,7 @@ module RubyIndexer
         end
 
         entry_name = entry.name
-        ancestor_index = ancestors.index(entry.owner&.name)
+        ancestor_index = ancestors.index(entry.owner.name)
         existing_entry, existing_entry_index = hash[entry_name]
 
         # Conditions for matching a method completion candidate:
@@ -248,6 +251,8 @@ module RubyIndexer
       ).void
     end
     def index_all(indexable_paths: RubyIndexer.configuration.indexables, &block)
+      index_core_declarations
+
       # Calculate how many paths are worth 1% of progress
       progress_step = (indexable_paths.length / 100.0).ceil
 
@@ -263,6 +268,8 @@ module RubyIndexer
 
     sig { params(indexable_path: IndexablePath, source: T.nilable(String)).void }
     def index_single(indexable_path, source = nil)
+      index_core_declarations
+
       content = source || File.read(indexable_path.full_path)
       dispatcher = Prism::Dispatcher.new
 
@@ -345,10 +352,10 @@ module RubyIndexer
         found = method_entries.filter_map do |entry|
           case entry
           when Entry::Member, Entry::MethodAlias
-            entry if entry.owner&.name == ancestor
+            entry if entry.owner.name == ancestor
           when Entry::UnresolvedMethodAlias
             # Resolve aliases lazily as we find them
-            if entry.owner&.name == ancestor
+            if entry.owner.name == ancestor
               resolved_alias = resolve_method_alias(entry, receiver_name)
               resolved_alias if resolved_alias.is_a?(Entry::MethodAlias)
             end
@@ -451,7 +458,7 @@ module RubyIndexer
       ancestors = linearized_ancestors_of(owner_name)
       return if ancestors.empty?
 
-      entries.select { |e| ancestors.include?(e.owner&.name) }
+      entries.select { |e| ancestors.include?(e.owner.name) }
     end
 
     # Returns a list of possible candidates for completion of instance variables for a given owner name. The name must
@@ -461,7 +468,7 @@ module RubyIndexer
       entries = T.cast(prefix_search(name).flatten, T::Array[Entry::InstanceVariable])
       ancestors = linearized_ancestors_of(owner_name)
 
-      variables = entries.select { |e| ancestors.any?(e.owner&.name) }
+      variables = entries.select { |e| ancestors.any?(e.owner.name) }
       variables.uniq!(&:name)
       variables
     end
@@ -829,6 +836,14 @@ module RubyIndexer
       original_entries.delete(entry)
       original_entries << resolved_alias
       resolved_alias
+    end
+
+    sig { void }
+    def index_core_declarations
+      return if @indexed_core_declarations
+
+      RubyIndexer::RBSIndexer.new(self).index_ruby_core
+      @indexed_core_declarations = true
     end
   end
 end

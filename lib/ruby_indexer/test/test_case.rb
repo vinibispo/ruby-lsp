@@ -7,8 +7,6 @@ module RubyIndexer
   class TestCase < Minitest::Test
     def setup
       @index = Index.new
-      RBSIndexer.new(@index).index_ruby_core
-      @default_indexed_entries = @index.instance_variable_get(:@entries).dup
     end
 
     private
@@ -38,10 +36,6 @@ module RubyIndexer
     def refute_entry(expected_name)
       entries = @index[expected_name]
       assert_nil(entries, "Expected #{expected_name} to not be indexed")
-    end
-
-    def assert_no_indexed_entries
-      assert_equal(@default_indexed_entries, @index.instance_variable_get(:@entries))
     end
 
     def assert_no_entry(entry)

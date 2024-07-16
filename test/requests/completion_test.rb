@@ -203,9 +203,9 @@ class CompletionTest < Minitest::Test
           textDocument: { uri: uri },
           position: end_position,
         })
-        result = server.pop_response.response
-        assert_equal(["Foo"], result.map(&:label))
-        assert_equal(["fake.rb"], result.map { _1.label_details.description })
+        result = server.pop_response.response.last
+        assert_equal("Foo", result.label)
+        assert_equal("fake.rb", result.label_details.description)
       end
     end
   end
@@ -232,7 +232,7 @@ class CompletionTest < Minitest::Test
           position: { line: 7, character: 3 },
         })
 
-        result = server.pop_response.response
+        result = server.pop_response.response.select { |completion| ["Foo::Bar", "Bar"].include?(completion.label) }
         assert_equal(["Foo::Bar", "Bar"], result.map(&:label))
         assert_equal(["Bar", "::Bar"], result.map(&:filter_text))
         assert_equal(["Bar", "::Bar"], result.map { |completion| completion.text_edit.new_text })
@@ -273,6 +273,7 @@ class CompletionTest < Minitest::Test
         })
 
         result = server.pop_response.response
+        result.reject! { |completion| completion.label == "Queue" }
         assert_equal(["Foo::Bar::Qux", "Foo::Qux"], result.map(&:label))
         assert_equal(["Qux", "Foo::Qux"], result.map(&:filter_text))
         assert_equal(["Qux", "Foo::Qux"], result.map { |completion| completion.text_edit.new_text })
@@ -325,8 +326,8 @@ class CompletionTest < Minitest::Test
           position: { line: 3, character: 4 },
         })
 
-        result = server.pop_response.response
-        assert_equal(["CONST"], result.map { |completion| completion.text_edit.new_text })
+        result = server.pop_response.response.first
+        assert_equal("CONST", result.text_edit.new_text)
       end
     end
   end
@@ -435,10 +436,10 @@ class CompletionTest < Minitest::Test
           position: { line: 5, character: 5 },
         })
 
-        result = server.pop_response.response
-        assert_equal(["A::B::Foo"], result.map(&:label))
-        assert_equal(["Foo"], result.map(&:filter_text))
-        assert_equal(["Foo"], result.map { |completion| completion.text_edit.new_text })
+        result = server.pop_response.response.first
+        assert_equal("A::B::Foo", result.label)
+        assert_equal("Foo", result.filter_text)
+        assert_equal("Foo", result.text_edit.new_text)
 
         server.process_message(id: 1, method: "textDocument/completion", params: {
           textDocument: { uri: uri },
@@ -642,7 +643,8 @@ class CompletionTest < Minitest::Test
         })
 
         result = server.pop_response.response
-        assert_equal(["method1", "method2"], result.map(&:label))
+        assert_includes(result.map(&:label), "method1")
+        assert_includes(result.map(&:label), "method2")
       end
     end
   end
@@ -999,16 +1001,18 @@ class CompletionTest < Minitest::Test
         position: { line: 10, character: 4 },
       })
 
-      result = server.pop_response.response
-      assert_equal(["baz", "bar"], result.map(&:label))
+      result1 = server.pop_response.response
+      assert_includes(result1.map(&:label), "baz")
+      assert_includes(result1.map(&:label), "bar")
 
       server.process_message(id: 1, method: "textDocument/completion", params: {
         textDocument: { uri: uri },
         position: { line: 5, character: 7 },
       })
 
-      result = server.pop_response.response
-      assert_equal(["baz", "bar"], result.map(&:label))
+      result2 = server.pop_response.response
+      assert_includes(result2.map(&:label), "baz")
+      assert_includes(result2.map(&:label), "bar")
     end
   end
 
@@ -1124,7 +1128,8 @@ class CompletionTest < Minitest::Test
       })
 
       result = server.pop_response.response
-      assert_equal(["abc0"], result.map(&:label))
+      assert_includes(result.map(&:label), "abc0")
+      ["abc1", "abc2", "abc3", "abc4", "abc5"].each { |local| refute_includes(result.map(&:label), local) }
 
       server.process_message(id: 1, method: "textDocument/completion", params: {
         textDocument: { uri: uri },

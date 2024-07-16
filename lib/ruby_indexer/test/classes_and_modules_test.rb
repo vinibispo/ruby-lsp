@@ -191,8 +191,6 @@ module RubyIndexer
 
       @index.delete(IndexablePath.new(nil, "/fake/path/foo.rb"))
       refute_entry("Foo")
-
-      assert_no_indexed_entries
     end
 
     def test_comments_can_be_attached_to_a_class

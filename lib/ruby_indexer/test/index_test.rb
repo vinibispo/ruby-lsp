@@ -355,8 +355,7 @@ module RubyIndexer
 
     def test_index_single_does_not_fail_for_non_existing_file
       @index.index_single(IndexablePath.new(nil, "/fake/path/foo.rb"))
-      entries_after_indexing = @index.names
-      assert_equal(@default_indexed_entries.keys, entries_after_indexing)
+      refute_empty(@index)
     end
 
     def test_linearized_ancestors_basic_ordering
@@ -1643,6 +1642,7 @@ module RubyIndexer
     end
 
     def test_linearizing_singleton_object
+      RubyIndexer::RBSIndexer.new(@index).index_ruby_core
       assert_equal(
         [
           "Object::<Class:Object>",

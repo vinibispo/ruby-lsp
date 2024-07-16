@@ -105,7 +105,8 @@ module RubyIndexer
         self.class::FOO = 1
       RUBY
 
-      assert_no_indexed_entries
+      refute_entry("var::FOO")
+      refute_entry("self.class::FOO")
     end
 
     def test_private_constant_indexing

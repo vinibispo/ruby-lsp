@@ -774,8 +774,6 @@ module RubyLsp
 
       Thread.new do
         begin
-          RubyIndexer::RBSIndexer.new(@global_state.index).index_ruby_core
-
           @global_state.index.index_all do |percentage|
             progress("indexing-progress", percentage)
             true

@@ -55,7 +55,7 @@ module RubyLsp
         if owner_name
           entries = entries.select do |entry|
             (entry.is_a?(RubyIndexer::Entry::Member) || entry.is_a?(RubyIndexer::Entry::InstanceVariable)) &&
-              entry.owner&.name == owner_name
+              entry.owner.name == owner_name
           end
         end
 

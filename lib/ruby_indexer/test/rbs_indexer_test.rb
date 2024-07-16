@@ -5,6 +5,11 @@ require_relative "test_case"
 
 module RubyIndexer
   class RBSIndexerTest < TestCase
+    def setup
+      super
+      RBSIndexer.new(@index).index_ruby_core
+    end
+
     def test_index_core_classes
       entries = @index["Array"]
       refute_nil(entries)

@@ -27,8 +27,10 @@ module RubyIndexer
       # stored by unresolved aliases which need the original nesting to be lazily resolved
       @stack = T.let([], T::Array[String])
 
+      object = T.cast(@index["Object"]&.first, Entry::Class)
+
       # A stack of namespace entries that represent where we currently are. Used to properly assign methods to an owner
-      @owner_stack = T.let([], T::Array[Entry::Namespace])
+      @owner_stack = T.let([object], T::Array[Entry::Namespace])
 
       dispatcher.register(
         self,
@@ -137,31 +139,30 @@ module RubyIndexer
     def on_singleton_class_node_enter(node)
       @visibility_stack.push(Entry::Visibility::PUBLIC)
 
-      current_owner = @owner_stack.last
+      current_owner = T.must(@owner_stack.last)
+      *_parts, short_name = current_owner.name.split("::")
 
-      if current_owner
-        expression = node.expression
-        @stack << (expression.is_a?(Prism::SelfNode) ? "<Class:#{@stack.last}>" : "<Class:#{expression.slice}>")
+      expression = node.expression
+      @stack << (expression.is_a?(Prism::SelfNode) ? "<Class:#{short_name}>" : "<Class:#{expression.slice}>")
 
-        existing_entries = T.cast(@index[@stack.join("::")], T.nilable(T::Array[Entry::SingletonClass]))
+      existing_entries = T.cast(@index[@stack.join("::")], T.nilable(T::Array[Entry::SingletonClass]))
 
-        if existing_entries
-          entry = T.must(existing_entries.first)
-          entry.update_singleton_information(node.location, expression.location, collect_comments(node))
-        else
-          entry = Entry::SingletonClass.new(
-            @stack,
-            @file_path,
-            node.location,
-            expression.location,
-            collect_comments(node),
-            nil,
-          )
-          @index.add(entry, skip_prefix_tree: true)
-        end
-
-        @owner_stack << entry
+      if existing_entries
+        entry = T.must(existing_entries.first)
+        entry.update_singleton_information(node.location, expression.location, collect_comments(node))
+      else
+        entry = Entry::SingletonClass.new(
+          @stack,
+          @file_path,
+          node.location,
+          expression.location,
+          collect_comments(node),
+          nil,
+        )
+        @index.add(entry, skip_prefix_tree: true)
       end
+
+      @owner_stack << entry
     end
 
     sig { params(node: Prism::SingletonClassNode).void }
@@ -310,28 +311,26 @@ module RubyIndexer
           comments,
           [Entry::Signature.new(list_params(node.parameters))],
           current_visibility,
-          @owner_stack.last,
+          T.must(@owner_stack.last),
         ))
       when Prism::SelfNode
-        owner = @owner_stack.last
+        owner = T.must(@owner_stack.last)
+        *_parts, short_name = owner.name
+        singleton = @index.existing_or_new_singleton_class(owner.name)
 
-        if owner
-          singleton = @index.existing_or_new_singleton_class(owner.name)
+        @index.add(Entry::Method.new(
+          method_name,
+          @file_path,
+          node.location,
+          node.name_loc,
+          comments,
+          [Entry::Signature.new(list_params(node.parameters))],
+          current_visibility,
+          singleton,
+        ))
 
-          @index.add(Entry::Method.new(
-            method_name,
-            @file_path,
-            node.location,
-            node.name_loc,
-            comments,
-            [Entry::Signature.new(list_params(node.parameters))],
-            current_visibility,
-            singleton,
-          ))
-
-          @owner_stack << singleton
-          @stack << "<Class:#{@stack.last}>"
-        end
+        @owner_stack << singleton
+        @stack << "<Class:#{short_name}>"
       end
     end
 
@@ -378,7 +377,7 @@ module RubyIndexer
         Entry::UnresolvedMethodAlias.new(
           method_name,
           node.old_name.slice,
-          @owner_stack.last,
+          T.must(@owner_stack.last),
           @file_path,
           node.new_name.location,
           comments,
@@ -406,9 +405,9 @@ module RubyIndexer
 
       # When instance variables are declared inside the class body, they turn into class instance variables rather than
       # regular instance variables
-      owner = @owner_stack.last
+      owner = T.must(@owner_stack.last)
 
-      if owner && !@inside_def
+      unless @inside_def
         owner = @index.existing_or_new_singleton_class(owner.name)
       end
 
@@ -471,7 +470,7 @@ module RubyIndexer
         Entry::UnresolvedMethodAlias.new(
           new_name_value,
           old_name_value,
-          @owner_stack.last,
+          T.must(@owner_stack.last),
           @file_path,
           new_name.location,
           comments,
@@ -576,7 +575,14 @@ module RubyIndexer
         next unless name && loc
 
         if reader
-          @index.add(Entry::Accessor.new(name, @file_path, loc, comments, current_visibility, @owner_stack.last))
+          @index.add(Entry::Accessor.new(
+            name,
+            @file_path,
+            loc,
+            comments,
+            current_visibility,
+            T.must(@owner_stack.last),
+          ))
         end
 
         next unless writer
@@ -587,7 +593,7 @@ module RubyIndexer
           loc,
           comments,
           current_visibility,
-          @owner_stack.last,
+          T.must(@owner_stack.last),
         ))
       end
     end
@@ -596,9 +602,7 @@ module RubyIndexer
     def handle_module_operation(node, operation)
       return if @inside_def
 
-      owner = @owner_stack.last
-      return unless owner
-
+      owner = T.must(@owner_stack.last)
       arguments = node.arguments&.arguments
       return unless arguments
 

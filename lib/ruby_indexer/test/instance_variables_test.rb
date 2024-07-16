@@ -170,7 +170,7 @@ module RubyIndexer
       RUBY
 
       entry = T.must(@index["@a"]&.first)
-      assert_nil(entry.owner)
+      assert_equal("Object::<Class:Object>", entry.owner.name)
     end
 
     def test_class_instance_variables_inside_self_method

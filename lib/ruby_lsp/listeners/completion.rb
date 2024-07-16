@@ -222,7 +222,7 @@ module RubyLsp
             ),
             kind: Constant::CompletionItemKind::FIELD,
             data: {
-              owner_name: entry.owner&.name,
+              owner_name: entry.owner.name,
             },
           )
         end
@@ -316,7 +316,7 @@ module RubyLsp
             text_edit: Interface::TextEdit.new(range: range, new_text: entry_name),
             kind: Constant::CompletionItemKind::METHOD,
             data: {
-              owner_name: entry.owner&.name,
+              owner_name: entry.owner.name,
             },
           )
         end
