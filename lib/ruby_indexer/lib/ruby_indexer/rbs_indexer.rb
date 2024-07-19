@@ -57,10 +57,36 @@ module RubyIndexer
       add_declaration_mixins_to_entry(declaration, class_entry)
       @index.add(class_entry)
       declaration.members.each do |member|
-        next unless member.is_a?(RBS::AST::Members::MethodDefinition)
-
-        handle_method(member, class_entry)
+        case member
+        when RBS::AST::Members::MethodDefinition
+          handle_method(member, class_entry)
+        when RBS::AST::Members::Alias # NOTE: This is a signature alias, not a Ruby method alias
+          handle_alias(member, class_entry, file_path)
+        end
       end
+    end
+
+    # TODO: (seperate) combine handle_class_declaration and handle_module_declaration
+
+    # TODO: check for duplication between alias and methods, etc.
+
+    sig { params(member: RBS::AST::Members::Alias, owner_entry: Entry::Namespace, file_path: String).void }
+    def handle_alias(member, owner_entry, file_path)
+      # TODO: get file_path from member.location.buffer.name ?
+      old_name = member.old_name
+      new_name = member.new_name
+      # original_method = member.old_name
+      # method = Enry::Method.new(member.new_name.name, file_path, location, location, comments, [], Entry::Visibility::PUBLIC, class_entry)
+
+      entry = Entry::UnresolvedMethodAlias.new(
+        new_name.to_s,
+        old_name.to_s,
+        owner_entry,
+        file_path,
+        to_ruby_indexer_location(member.location),
+        [], # TODO: (comments)
+      )
+      @index.add(entry)
     end
 
     sig { params(declaration: RBS::AST::Declarations::Module, pathname: Pathname).void }
