@@ -558,7 +558,7 @@ module RubyIndexer
           attached_ancestor.file_path,
           attached_ancestor.location,
           attached_ancestor.name_location,
-          [],
+          +"",
           nil,
         )
         add(singleton, skip_prefix_tree: true)

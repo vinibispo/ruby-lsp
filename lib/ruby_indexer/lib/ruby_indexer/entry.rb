@@ -24,7 +24,7 @@ module RubyIndexer
 
     alias_method :name_location, :location
 
-    sig { returns(T::Array[String]) }
+    sig { returns(String) }
     attr_reader :comments
 
     sig { returns(Visibility) }
@@ -35,7 +35,7 @@ module RubyIndexer
         name: String,
         file_path: String,
         location: T.any(Prism::Location, RubyIndexer::Location),
-        comments: T::Array[String],
+        comments: String,
       ).void
     end
     def initialize(name, file_path, location, comments)
@@ -116,7 +116,7 @@ module RubyIndexer
           file_path: String,
           location: T.any(Prism::Location, RubyIndexer::Location),
           name_location: T.any(Prism::Location, Location),
-          comments: T::Array[String],
+          comments: String,
         ).void
       end
       def initialize(nesting, file_path, location, name_location, comments)
@@ -177,7 +177,7 @@ module RubyIndexer
           file_path: String,
           location: T.any(Prism::Location, RubyIndexer::Location),
           name_location: T.any(Prism::Location, Location),
-          comments: T::Array[String],
+          comments: String,
           parent_class: T.nilable(String),
         ).void
       end
@@ -195,7 +195,7 @@ module RubyIndexer
     class SingletonClass < Class
       extend T::Sig
 
-      sig { params(location: Prism::Location, name_location: Prism::Location, comments: T::Array[String]).void }
+      sig { params(location: Prism::Location, name_location: Prism::Location, comments: String).void }
       def update_singleton_information(location, name_location, comments)
         # Create a new RubyIndexer::Location object from the Prism location
         @location = Location.new(
@@ -321,7 +321,7 @@ module RubyIndexer
           name: String,
           file_path: String,
           location: T.any(Prism::Location, RubyIndexer::Location),
-          comments: T::Array[String],
+          comments: String,
           visibility: Visibility,
           owner: T.nilable(Entry::Namespace),
         ).void
@@ -376,7 +376,7 @@ module RubyIndexer
           file_path: String,
           location: T.any(Prism::Location, RubyIndexer::Location),
           name_location: T.any(Prism::Location, Location),
-          comments: T::Array[String],
+          comments: String,
           signatures: T::Array[Signature],
           visibility: Visibility,
           owner: T.nilable(Entry::Namespace),
@@ -427,7 +427,7 @@ module RubyIndexer
           name: String,
           file_path: String,
           location: T.any(Prism::Location, RubyIndexer::Location),
-          comments: T::Array[String],
+          comments: String,
         ).void
       end
       def initialize(target, nesting, name, file_path, location, comments) # rubocop:disable Metrics/ParameterLists
@@ -464,7 +464,7 @@ module RubyIndexer
           name: String,
           file_path: String,
           location: T.any(Prism::Location, RubyIndexer::Location),
-          comments: T::Array[String],
+          comments: String,
           owner: T.nilable(Entry::Namespace),
         ).void
       end
@@ -493,7 +493,7 @@ module RubyIndexer
           owner: T.nilable(Entry::Namespace),
           file_path: String,
           location: Prism::Location,
-          comments: T::Array[String],
+          comments: String,
         ).void
       end
       def initialize(new_name, old_name, owner, file_path, location, comments) # rubocop:disable Metrics/ParameterLists
@@ -517,10 +517,7 @@ module RubyIndexer
 
       sig { params(target: T.any(Member, MethodAlias), unresolved_alias: UnresolvedMethodAlias).void }
       def initialize(target, unresolved_alias)
-        full_comments = ["Alias for #{target.name}\n"]
-        full_comments.concat(unresolved_alias.comments)
-        full_comments << "\n"
-        full_comments.concat(target.comments)
+        full_comments = "Alias for #{target.name}\n#{unresolved_alias.comments}\n#{target.comments}"
 
         super(
           unresolved_alias.new_name,

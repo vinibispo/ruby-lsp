@@ -521,7 +521,7 @@ module RubyIndexer
       )
     end
 
-    sig { params(node: Prism::Node).returns(T::Array[String]) }
+    sig { params(node: Prism::Node).returns(String) }
     def collect_comments(node)
       comments = []
 
@@ -544,7 +544,7 @@ module RubyIndexer
         comments.prepend(comment_content)
       end
 
-      comments
+      comments.join("\n")
     end
 
     sig { params(name: String).returns(String) }
