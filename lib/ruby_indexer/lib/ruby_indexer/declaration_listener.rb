@@ -16,8 +16,13 @@ module RubyIndexer
       @file_path = file_path
       @visibility_stack = T.let([Entry::Visibility::PUBLIC], T::Array[Entry::Visibility])
       @comments_by_line = T.let(
-        parse_result.comments.to_h do |c|
-          [c.location.start_line, c]
+        parse_result.comments.chunk_while do |left, right|
+          left.location.start_line == right.location.start_line - 1
+        end.to_h do |comments|
+          [
+            comments.last.location.start_line,
+            comments,
+          ]
         end,
         T::Hash[Integer, Prism::Comment],
       )
@@ -523,29 +528,22 @@ module RubyIndexer
 
     sig { params(node: Prism::Node).returns(String) }
     def collect_comments(node)
-      comments = +""
-
       start_line = node.location.start_line - 1
       start_line -= 1 unless @comments_by_line.key?(start_line)
 
-      start_line.downto(1) do |line|
-        comment = @comments_by_line[line]
-        break unless comment
+      comments = @comments_by_line[start_line]&.map do |comment|
+        content = comment.location.slice.chomp
+        content.delete_prefix!("#")
+        content.delete_prefix!(" ")
+        content
+      end
+      return +"" unless comments
 
-        comment_content = comment.location.slice.chomp
-
-        # invalid encodings would raise an "invalid byte sequence" exception
-        if !comment_content.valid_encoding? || comment_content.match?(RubyIndexer.configuration.magic_comment_regex)
-          next
-        end
-
-        comment_content.delete_prefix!("#")
-        comment_content.delete_prefix!(" ")
-        comments.prepend("#{comment_content}\n")
+      comments.select! do |comment|
+        comment.valid_encoding? && !comment.match?(RubyIndexer.configuration.magic_comment_regex)
       end
 
-      comments.chomp!
-      comments
+      comments.join("\n")
     end
 
     sig { params(name: String).returns(String) }
