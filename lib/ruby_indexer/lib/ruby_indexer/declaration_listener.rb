@@ -523,7 +523,7 @@ module RubyIndexer
 
     sig { params(node: Prism::Node).returns(String) }
     def collect_comments(node)
-      comments = []
+      comments = +""
 
       start_line = node.location.start_line - 1
       start_line -= 1 unless @comments_by_line.key?(start_line)
@@ -541,10 +541,11 @@ module RubyIndexer
 
         comment_content.delete_prefix!("#")
         comment_content.delete_prefix!(" ")
-        comments.prepend(comment_content)
+        comments.prepend("#{comment_content}\n")
       end
 
-      comments.join("\n")
+      comments.chomp!
+      comments
     end
 
     sig { params(name: String).returns(String) }

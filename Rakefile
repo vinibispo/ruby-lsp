@@ -11,6 +11,12 @@ Rake::TestTask.new(:test) do |t|
   t.test_files = FileList["test/**/*_test.rb", "lib/ruby_indexer/test/**/*_test.rb"].exclude("test/fixtures/prism/**/*")
 end
 
+Rake::TestTask.new(:test_indexer) do |t|
+  t.libs << "test"
+  t.libs << "lib"
+  t.test_files = FileList["lib/ruby_indexer/test/**/*_test.rb"].exclude("test/fixtures/prism/**/*")
+end
+
 RDoc::Task.new do |rdoc|
   rdoc.main = "README.md"
   rdoc.title = "Ruby LSP documentation"
