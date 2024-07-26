@@ -112,6 +112,47 @@ if options[:time_index]
 end
 
 if options[:doctor]
+  puts "Ruby LSP v#{RubyLsp::VERSION}"
+  path = "../code-db/.ruby-lsp/Gemfile.lock"
+  if File.exist?(path)
+    puts "Custom bundle found"
+  else
+    puts "No custom bundle found"
+  end
+
+  gemfile_lock_content = File.read(path)
+  lockfile_parser = Bundler::LockfileParser.new(gemfile_lock_content)
+
+  dependencies = lockfile_parser.dependencies
+
+  required_sorbet_runtime_version_as_string = Gem::Specification.load("ruby-lsp.gemspec")
+    .dependencies.find { _1.name == "sorbet-runtime" }.requirements_list.first.split(" ").last
+
+  specs = lockfile_parser.specs
+  required_sorbet_runtime_version = Gem::Version.new(required_sorbet_runtime_version_as_string)
+  found_sorbet_runtime_version = specs.find { _1.name == "sorbet-runtime" }.version
+
+  if found_sorbet_runtime_version >= required_sorbet_runtime_version
+    puts "sorbet-runtime version is acceptable"
+  else
+    puts "not"
+  end
+
+  require "debug"
+  # binding.break
+
+  # Print out the dependencies and their versions
+  # puts "Dependencies:"
+  dependencies.each do |name, dependency|
+    # puts "#{name} (#{dependency.requirement})"
+  end
+
+  # puts "\nSpecs:"
+  specs.each do |spec|
+    # puts "#{spec.name} (#{spec.version})"
+  end
+  return
+
   if File.exist?(".index.yml")
     begin
       config = YAML.parse_file(".index.yml").to_ruby
