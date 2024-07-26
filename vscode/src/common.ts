@@ -28,6 +28,7 @@ export enum Command {
   NewMinitestFile = "rubyLsp.newMinitestFile",
   CollectRubyLspInfo = "rubyLsp.collectRubyLspInfo",
   StartServerInDebugMode = "rubyLsp.startServerInDebugMode",
+  ProfileFile = "rubyLsp.profileFile",
 }
 
 export interface RubyInterface {

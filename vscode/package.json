@@ -56,6 +56,14 @@
           "group": "9_cutcopypaste"
         }
       ],
+      "editor/title": [
+        {
+          "command": "rubyLsp.profileFile",
+          "when": "editorTextFocus && resourceLangId == ruby",
+          "group": "navigation",
+          "icon": "$(record)"
+        }
+      ],
       "view/title": [
         {
           "command": "rubyLsp.fileOperation",
@@ -155,6 +163,12 @@
         "command": "rubyLsp.collectRubyLspInfo",
         "title": "Collect Ruby LSP Information for Issue Reporting",
         "category": "Ruby LSP"
+      },
+      {
+        "command": "rubyLsp.profileFile",
+        "title": "Profile file",
+        "category": "Ruby LSP",
+        "icon": "$(record)"
       }
     ],
     "configuration": {
