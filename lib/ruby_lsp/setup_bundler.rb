@@ -14,6 +14,20 @@ require "time"
 
 Bundler.ui.level = :silent
 
+# We have found that silencing the Bundler UI level is not enough to prevent it from printing warnings in all
+# situations, so we patch it too. See https://github.com/Shopify/ruby-lsp/pull/1199 for discussion.
+module Bundler
+  module UI
+    class Shell
+      extend T::Sig
+
+      sig { params(msg: T.nilable(String), newline: T.nilable(T::Boolean)).void }
+      def info(msg = nil, newline = nil)
+      end
+    end
+  end
+end
+
 module RubyLsp
   class SetupBundler
     extend T::Sig
