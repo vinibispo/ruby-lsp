@@ -140,6 +140,11 @@
         "title": "Ruby file operations",
         "category": "Ruby LSP",
         "icon": "$(ruby)"
+      },
+      {
+        "command": "rubyLsp.migrateLaunchConfiguration",
+        "title": "Migrate vscode-rdbg's launch.json configurations to ruby_lsp style",
+        "category": "Ruby LSP"
       }
     ],
     "configuration": {
