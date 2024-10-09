@@ -52,6 +52,43 @@ class CodeLensExpectationsTest < ExpectationsTestRunner
     )
   end
 
+  def test_command_generation_for_minitest_spec
+    stub_test_library("minitest")
+    source = <<~RUBY
+      class FooTest < MiniTest::Test
+        describe "a" do
+          it "b"
+        end
+      end
+    RUBY
+    uri = URI("file:///fake.rb")
+
+    document = RubyLsp::RubyDocument.new(source: source, version: 1, uri: uri)
+
+    dispatcher = Prism::Dispatcher.new
+    listener = RubyLsp::Requests::CodeLens.new(@global_state, uri, dispatcher)
+    dispatcher.dispatch(document.parse_result.value)
+    response = listener.perform
+
+    assert_equal(9, response.size)
+
+    assert_equal("Run In Terminal", T.must(response[1]).command.title)
+    assert_equal(
+      "bundle exec ruby -Itest /fake.rb --name \"/^FooTest(#|::)/\"",
+      T.must(response[1]).command.arguments[2],
+    )
+    assert_equal("Run In Terminal", T.must(response[4]).command.title)
+    assert_equal(
+      "bundle exec ruby -Itest /fake.rb --name \"/^FooTest::a(#|::)/\"",
+      T.must(response[4]).command.arguments[2],
+    )
+    assert_equal("Run In Terminal", T.must(response[7]).command.title)
+    assert_equal(
+      "bundle exec ruby -Itest /fake.rb --name \"/^FooTest::a#test_0001_b$/\"",
+      T.must(response[7]).command.arguments[2],
+    )
+  end
+
   def test_command_generation_for_test_unit
     stub_test_library("test-unit")
     source = <<~RUBY
